@@ -295,7 +295,7 @@ export function ThreePillarBento({
       action: 'BUY',
       size_pct: 12.0,
       confidence: 0.94,
-      reasoning: `Visual Algo Builder: [PRICE > MA] AND [VOL > 2X] triggered on ${algoAsset} at live Bitget price $${livePrice.toLocaleString()}. Bitget Risk Veto passed.`,
+      reasoning: `Visual Algo Builder: [PRICE > MA] AND [VOL > 2X] triggered on ${algoAsset} at live market price $${livePrice.toLocaleString()}. Guardian Risk Veto passed.`,
     };
     onDeployAlgo(proposal);
   };
@@ -455,7 +455,7 @@ export function ThreePillarBento({
             VISUAL ALGO BUILDER
           </h3>
           <p className="mt-1 text-xs text-gray-400 font-sans font-light leading-relaxed">
-            Visual strategy builder with zero-code logic chaining and one-click deployment directly into Bitget paper liquidity.
+            Visual strategy builder with zero-code logic chaining and one-click deployment directly into simulated paper liquidity.
           </p>
         </div>
       </div>

@@ -1,116 +1,163 @@
-# ⚡ LUNARIS TERMINAL (BITGET EDITION)
-### Autonomous AI Hedge-Terminal & Cross-Asset Trading Cockpit
-**Built for the Bitget AI Base Camp Hackathon (Season 2)**  
+# ⚡ LUNARIS REASON — OpenServ RWA & Autonomous Trading Node
+### Autonomous Real-World Asset (RWA) Vault Allocator & SERV Reasoning Engine
+**Built for the OpenServ "SERV Hackathon Edition 01" (September 14–28, 2026)**  
 **Author / Lead Architect:** Joezzy (@JoezzyWeb3 / `joezzyweb3@gmail.com`)  
-**Live Application URL:** [https://lunaristerminal.vercel.app/](https://lunaristerminal.vercel.app/)  
-**Full Technical Documentation:** See [`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md) for the complete, exhaustive judging guide and architecture specification.
+**Live Application URL:** https://ais-pre-vypqgfn3pdyc2zpoyth3md-340735411043.europe-west3.run.app  
+**Full Technical Documentation:** See [`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md)
 
 ---
 
-## 🌟 OVERVIEW
-**Lunaris Terminal** is an institutional-grade, cross-asset AI trading terminal that bridges cryptocurrency markets (`BTC`, `ETH`, `SOL`, `SUI`, `BGB`) with 24/7 tokenized US equities (`NVDAon`, `TSLAon`, `AAPLon`, `GOOGLon` rTokens).
+## 🌟 EXECUTIVE OVERVIEW & HACKATHON ALIGNMENT
 
-It features a **Four-Pillar Fail-Safe Architecture**:
-1. **Multi-Agent Quorum Consensus**: Three specialized AI agents (**Quant-Omega**, **NEXUS-RED**, **Atlas-Macro**) debate real-time market microstructure, liquidity traps, and macroeconomic catalysts, synthesized by **Google Gemini 2.5 Flash AI**.
-2. **Deterministic Risk Veto Engine (Guardian-01)**: **Guardian-01 is explicitly NOT an AI or LLM agent.** It is an independent, non-probabilistic, rule-based mathematical risk engine executing downstream of the AI council. Guardian-01 enforces hard mathematical collars (5x max leverage, 15% single-asset allocation, 3%/5% daily drawdown circuit breakers, and 0.5% slippage collars) that cannot be hallucinated away, argued down, or overridden by any LLM.
-3. **Institutional Fee & Slippage Execution Engine**: Enforces Bitget's published VIP-0 taker fee schedule (0.06% crypto / 0.10% rTokens) plus dynamic Level-2 orderbook slippage modeling ($Net = Gross - Fee - Slippage$).
-4. **7×24 Autonomous Loop & Immutable Ledger**: Real-time paper execution streaming, SHA-256 state proof hashing, interactive **Daily PnL Calendar Heatmap**, and strictly append-only persistence across **Cloudflare D1 Edge SQL Database** and server disk storage.
+**LUNARIS REASON** is an autonomous cross-asset AI trading node and Real-World Asset (RWA) allocator built on the **OpenServ platform**. It solves the critical disconnect between high-volatility crypto yields and tokenized real-world assets through **bounded directed acyclic graph (DAG) reasoning**, **Model Context Protocol (MCP)** tool execution, and **deterministic risk invariants**.
+
+### Hackathon Track Submission Matrix
+
+| OpenServ Track | How LUNARIS REASON Solves It | Core Artifact / API |
+| :--- | :--- | :--- |
+| **Track 3: RWA Vaults** *(Primary)* | Autonomous capital rotation between volatile crypto funding and licensed RWA yield vaults (UST10Y 5.15% APY, TBILL3M 5.28% APY, PAXG Physical Gold, REIT 6.40% Yield). Solves on-chain NAV discount/premium dislocations. | `/matrix` (RWA Yield & NAV Matrix) |
+| **Track 1: Mainnet & MCP** | Exposes institutional trading and risk-check tools via standard OpenServ Model Context Protocol (MCP) endpoints for external AI agents. | `GET /api/mcp/tools`<br>`POST /api/mcp/execute` |
+| **Track 2: AgentKit & Escrow** | Autonomous revenue generation: every profitable rebalance and trade automatically routes a 10% performance micro-toll to the OpenServ Protocol Escrow. | `GET /api/openserv/escrow`<br>`/auditlog` (Escrow Badge) |
+| **Track 4: SERV Reasoning** | Eliminates unbounded LLM hallucinations by forcing all decisions through a 4-node DAG. Every trade mints an immutable cryptographic Proof Certificate with SHA-256 fingerprint. | `/certificates` (Proof Certificates Gallery) |
 
 ---
 
-## 🚀 QUICK START
+## 🔬 CRITICAL RWA PROBLEMS SOLVED WITH AI & SERV REASONING
+
+1. **Primary Oracle NAV vs Secondary Token Market Dislocation**:
+   - Tokenized RWAs frequently deviate from their underlying Net Asset Value (NAV) on secondary DEX/CEX venues due to liquidity fragmentation.
+   - **AI Solution**: Continuous multi-asset NAV surveillance detects basis spreads ($\Delta \text{Bps}$). When an RWA trades at a discount ($\le -8 \text{ bps}$), the agent executes delta-neutral mean-reversion rebalancing.
+
+2. **Dynamic Crypto Staking vs. RWA Fixed Income Yield Rotation**:
+   - Crypto funding rates fluctuate unpredictably. Holding idle capital in low-yield crypto destroys risk-adjusted returns (Sharpe ratio drops).
+   - **AI Solution**: Atlas-Macro continuously evaluates the yield differential between crypto staking/funding APY and the risk-free RWA rate (UST10Y at 5.15% APY), autonomously rotating capital into tokenized US Treasuries when crypto yields lag.
+
+3. **Liquidity Depth & Slippage Collapse on Thin RWA Books**:
+   - Institutional orders into tokenized RWAs can suffer devastating slippage if executed carelessly.
+   - **AI Solution**: **Guardian-01 Deterministic Slippage Gate** enforces a non-probabilistic, mathematical $\le 0.50\%$ slippage collar. Orders exceeding 0.5% are hard-vetoed before hitting the orderbook.
+
+4. **Reserve Solvency Forensics**:
+   - Live monitoring of custodian reserve backing (e.g. 101.8% over-collateralized), custodian vault audits (BNY Mellon, State Street, Brink's London LBMA), and health indices.
+
+---
+
+## 🏛️ FOUR-NODE BOUNDED REASONING GRAPH (DAG)
+
+Unlike probabilistic chatbot prompts, every autonomous decision in LUNARIS REASON must traverse an invariant 4-stage Directed Acyclic Graph:
+
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│  NODE 1: QUANT  │ ────► │  NODE 2: NEXUS  │ ────► │  NODE 3: ATLAS  │ ────► │ NODE 4: GAVEL   │
+│  L2 & NAV Data  │       │  Adversarial    │       │  Macro & RWA    │       │ Deterministic   │
+│  Ingestion      │       │  Chaos Trap     │       │  Yield Spread   │       │ Slippage Gate   │
+└─────────────────┘       └─────────────────┘       └─────────────────┘       └─────────────────┘
+                                                                                       │
+                                                                                       ▼
+                                                                            [ PROOF CERTIFICATE ]
+                                                                            • SHA-256 Digest
+                                                                            • 4/4 Quorum Signatures
+                                                                            • ≤ 0.50% Collar Met
+```
+
+- **Node 1: Quant-Omega (Technical Lead)**: Analyzes orderbook depth, relative strength, and momentum signals.
+- **Node 2: NEXUS-RED (Adversarial Red Team)**: Hunts for liquidity traps, crowded funding rates, and oracle lag.
+- **Node 3: Atlas-Macro (RWA Yield Lead)**: Checks treasury yield curves, CPI catalysts, and asset allocation spreads.
+- **Node 4: Guardian-01 (Deterministic Risk Gavel)**: Pure mathematical code gate (non-LLM) enforcing 5x max leverage, 25% single-asset cap, and 0.50% max slippage collar.
+
+---
+
+## 🔌 OPENSERV MODEL CONTEXT PROTOCOL (MCP) API REFERENCE
+
+LUNARIS REASON serves as an autonomous tool provider on the OpenServ network.
+
+### 1. List Registered Tools
+```http
+GET /api/mcp/tools
+```
+Returns standardized schemas for:
+- `get_rwa_vault_yields`: Live APYs, benchmark NAVs, and basis spreads.
+- `check_risk_collar`: Evaluates proposed execution against Guardian-01's 0.50% collar.
+- `evaluate_rwa_yield_spread`: Calculates yield delta between crypto staking and UST10Y Treasuries.
+- `verify_proof_certificate`: Cryptographically verifies SHA-256 reason fingerprints.
+- `execute_rwa_rebalance`: Routes capital to licensed RWA yield vaults with 10% escrow fee.
+
+### 2. Execute MCP Tool
+```http
+POST /api/mcp/execute
+Content-Type: application/json
+
+{
+  "tool": "check_risk_collar",
+  "arguments": {
+    "instrument": "UST10Y/USD",
+    "direction": "LONG",
+    "entryPrice": 106.20,
+    "exitPrice": 106.45
+  }
+}
+```
+Response:
+```json
+{
+  "success": true,
+  "tool": "check_risk_collar",
+  "evaluation": {
+    "instrument": "UST10Y/USD",
+    "direction": "LONG",
+    "slippagePct": 0.235,
+    "maxCollarAllowedPct": 0.50,
+    "collarPassed": true,
+    "verdict": "APPROVED"
+  },
+  "servAttestation": {
+    "step": "GUARDIAN_COLLAR_INSPECTION",
+    "timestamp": "2026-09-27T22:15:00.000Z",
+    "signature": "serv_collar_gate_pass_1790547300000"
+  }
+}
+```
+
+### 3. OpenServ AgentKit Protocol Escrow Telemetry
+```http
+GET /api/openserv/escrow
+```
+Tracks cumulative performance micro-tolls (10% of realized profits) generated autonomously by the node.
+
+---
+
+## 💎 HARD MATHEMATICAL INVARIANTS
+
+1. **Net Realized PnL Identity**:
+   $$\text{Net Realized PnL} = \text{Gross PnL} - \text{Protocol Fee} - \text{L2 Slippage}$$
+   Every trade audit entry strictly verifies this arithmetic equality down to the exact cent.
+2. **0.50% Max Slippage Collar**:
+   $$\text{Deviation} = \frac{|\text{Exit Price} - \text{Entry Price}|}{\text{Entry Price}} \le 0.0050$$
+   Any order attempting to fill outside this collar is clamped or rejected.
+3. **Fresh Slate & Zero-Drift 60-Second Cadence**:
+   The autonomous daemon ticks on universal UTC 60-second boundaries (`60,000ms`), ensuring zero drift between client views and server-authoritative persistence.
+
+---
+
+## 🚀 LOCAL SETUP & TESTING
+
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Configure environment variables (.env)
-# GEMINI_API_KEY=your_key_here
+# 2. Run invariant test suites (24 tests covering PnL math, collars, and auth)
+npm test
 
-# 3. Start development server (Port 3000)
+# 3. Validate TypeScript compilation & linting
+npm run lint
+
+# 4. Start the node (Vite + Express on Port 3000)
 npm run dev
 ```
 
 ---
 
-## 🧭 MODULE OVERVIEW FOR JUDGES
-- **DECK (`CommandDeckHero`)**: Flagship executive overview, live portfolio telemetry, four-pillar fail-safe architecture, 6×6 cross-asset correlation matrix, and quantitative backtesting engine.
-- **TERMINAL (`RealTimeTradingChart` & `LiquidityDepthHeatmap`)**: High-density trading workstation with multi-timeframe candlestick charts and Bitget Level-2 orderbook depth heatmaps.
-- **AUTOPILOT (`AutonomousLoopPanel`)**: Dual-mode execution engine. Runs autonomously as a background trading daemon when engaged with dynamic take-profit targets, trailing stops, and margin health monitoring, while also supporting direct manual trader orders and discretionary intervention anytime.
-- **COUNCIL (`DebateConsole`)**: Transparent AI debate chamber where three specialized AI agents (**Quant-Omega**, **NEXUS-RED**, **Atlas-Macro**) deliberate over trade signals synthesized by Gemini 2.5 Flash, subject to non-negotiable compliance checks by **Guardian-01** (Deterministic Risk Engine).
-- **PULSE (`PulseRadarPanel`)**: Social sentiment velocity index (0–100), funding rate heatmaps, and whale volume anomaly detection.
-- **ALGO (`VisualAlgoBuilder`)**: Drag-and-drop block-based trading strategy builder with instant JSON strategy compilation.
-- **MATRIX (`CrossAssetMatrix`)**: 6×6 Real-time Pearson correlation & statistical arbitrage matrix bridging Bitget spot crypto (`BTC`, `ETH`, `SOL`, `SUI`) with 24/7 tokenized US equities (`NVDAon`, `TSLAon`). Features interactive pairwise correlation radar, historical beta multiplier, 24h delta spread analysis, and one-click StatArb execution dispatch.
-- **STREAM (`AgentActivityStream`)**: Real-time supervisory telemetry and heuristic event stream. Surfaces sub-second agent reasoning, orderbook wall scans, and high-conviction advisories with instant, two-way Natural Language Mandate handoffs to Council Quorum or Autopilot.
-- **AUDIT (`PaperTradingAuditView`)**: Strictly append-only verifiable execution ledger, interactive **Daily PnL Calendar**, CSV export, SHA-256 transaction proof viewer, Bitget fee and L2 slippage audit breakdown, and canonical sequence verification.
-
----
-
-## 💎 REALISTIC FEE & SLIPPAGE MODEL (BITGET PUBLISHED STANDARD)
-
-To guarantee institutional rigor and eliminate unrealistic paper trading returns, Lunaris implements full fee and market-impact modeling calibrated directly to Bitget's published fee schedule:
-
-1. **Bitget Published Taker Fee Tier**:
-   - **Crypto / Futures (`BTC`, `ETH`, `SOL`, `SUI`, `BGB`)**: **0.06% (6 bps)** flat taker fee applied against gross trade notional.
-   - **Tokenized Equities & rTokens (`NVDAon`, `TSLAon`, `AAPLon`, `GOOGLon`, etc.)**: **0.10% (10 bps)** spot taker fee reflecting real-world tokenized equity market maker spreads.
-2. **Dynamic L2 Orderbook Slippage Model**:
-   - Simulated dynamic slippage derived from order size and level-2 book depth.
-   - Base slippage begins at **2.0 bps (0.02%)** for liquid pairs and dynamically scales with trade notional up to **18.0 bps** for larger block orders or volatile market regimes.
-3. **Net Realized PnL Calculation**:
-   $$\text{Net Realized PnL} = \text{Gross PnL} - \text{Taker Fee} - \text{Estimated L2 Slippage}$$
-4. **Activation Date & Historical Record Transition (Effective: September 19, 2026)**:
-   - **Pre-September 19, 2026 (Genesis Calibration Period)**: Early bootstrap trades reflect the baseline gross execution model, which was used during initial protocol development to isolate raw alpha signals and verify cross-asset data feeds without synthetic assumptions.
-   - **Post-September 19, 2026 (Institutional Standard Upgrade)**: On **September 19, 2026**, the execution engine was upgraded to enforce Bitget's published VIP-0 taker fee schedule (0.06% crypto / 0.10% rTokens) plus dynamic Level-2 orderbook slippage modeling across all live and autonomous trades. This upgrade ensures that our performance metrics strictly reflect real-world market friction, bid-ask spread crossing, and exchange liquidity drag rather than theoretical paper returns.
-   - **Ledger Immutability**: In strict accordance with our append-only accounting policy, historical records remain intact and are never retroactively altered or sanitized. All active trades from September 19, 2026 forward carry full cryptographic fee and slippage breakdown receipts in the Audit Log and CSV exports.
-
----
-
-## 🛡️ SPECIALIZED FEATURES & TOOLS
-- **Bitget BYOK Integration**: Connect real Bitget API keys via secure client-side HMAC-SHA256 V2 authentication.
-- **Black Swan Disaster Drills**: Simulate FTX bank runs, Fed 100bps rate shocks, flash crashes, and stablecoin de-pegs to test Guardian-01 veto speed.
-- **Command Palette (`Cmd+K` / `Ctrl+K`)**: Rapid keyboard navigation across all modules and emergency controls.
-- **Web Audio Sound Engine**: Live trading floor ambient audio with tactile cybernetic execution sounds.
-
----
-
-## 🔍 AUDIT TRANSPARENCY: CANONICAL SEQUENCE (`#SEQ`) VS. TRANSACTION ID (`PT-ID`)
-
-Evaluators, hackathon judges, and quantitative auditors inspecting the **AUDIT LOG** will notice two distinct identifiers attached to each trade:
-1. **The Global Transaction ID** (e.g., `PT-20260918-4267`)
-2. **The Yellow Canonical Sequence Tag** (e.g., `#3569`)
-
-### Why are these numbers different? Is there a clash?
-**No. This separation is standard institutional exchange accounting practice: separating the Wire Ingress Gateway from the Authoritative Settled Clearinghouse Ledger.**
-
-```
-┌────────────────────────────────────────────────────────┐
-│   Raw Ingestion Events (~4,267 Wire Pulses)            │  <- Generated by background loops, worker ticks & test pulses
-└───────────────────────────┬────────────────────────────┘
-                            │
-                            ▼  Pre-Trade Ingestion Boundary & Anomaly Filter
-┌────────────────────────────────────────────────────────┐
-│  - Forensic Quarantine Archive (465 Quarantined Ticks) │  <- Test harness artifacts & out-of-corridor spikes
-│    (Isolated from Trading Ledger — Inspect & Download) │     (Preserved for forensic review with raw hashes)
-└───────────────────────────┬────────────────────────────┘
-                            │
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│  = Canonical Settled Ledger Sequence (#3569 Rows)      │  <- Consecutive, gapless immutable ledger chain (#1 .. #N)
-└────────────────────────────────────────────────────────┘
-```
-
-| Metric | Identifier | Role & Guarantee |
-| :--- | :--- | :--- |
-| **Transaction ID** | `PT-20260918-4267` | **Global Wire Event Counter:** Assigned immediately when an execution attempt is emitted by background daemon loops, test harness pulses, or multi-tab workers. Format: `PT-[YYYYMMDD]-[SERIAL]`. Acts as an uncommitted ingress drop-copy. |
-| **Canonical Sequence** | `#3569` (`auditSeq`) | **Authoritative Settled Ledger Row:** Assigned **strictly after** the trade passes deterministic risk bounds (`ASSET_PRICE_CORRIDORS`), timestamp verification, and deduplication. Forms a gapless, consecutive sequence (`#1, #2, ... #3569`). |
-
-### Institutional Architecture & Transparency Guarantees
-- **Exchange FIX Gateway Analogy:** Similar to how institutional exchange matching engines receive thousands of raw wire orders, but only credit-checked, risk-cleared executions commit to clearinghouse settlement, Lunaris maintains a strict separation between raw event telemetry and the settled ledger.
-- **Automated Daily Self-Audit & Non-Destructive Quarantine (Activated September 25, 2026):** To eliminate the operational risk, subjectivity, and potential bias of manual log reconciliation, Lunaris Terminal activated an automated daily self-audit daemon on **September 25, 2026**. Under strict financial compliance standards, raw ledger records are **never deleted or retroactively edited**. Instead, the daemon verifies all 5 core mathematical invariants ($Net = Gross - Fee - Slippage$ with $\le 0.5\%$ collar enforcement) and segregates any anomalous ticks or test harness pulses into `/data/quarantine/` with cryptographic timestamps and an explicit `quarantineReason` tag.
-- **Rejected Trades Archive (Zero Data Loss):** Quarantined events are never silently purged or injected back into trading history. Judges can click the red **`Rejected Trades`** button directly in the Audit View to inspect each rejected record, verify its rejection reason and SHA-256 hash, or download the raw data as `.JSON` or `.CSV`.
-- **Operator Passcode Scope:** The administrative passcode protects the **Operator Control Plane** (preventing public web visitors from pausing the 24/7 background execution daemon or triggering system resets). It cannot rewrite, edit, or delete historical trades. The verified ledger is strictly append-only.
-- **In-App Inspection:** Judges can click the yellow **`#Seq`** tag on any trade or click the **`[?] Why #Seq vs PT-ID?`** button directly next to *Pause Auto-Loop* in the Audit Log to inspect the cryptographic verification proof.
-
----
-
-For complete deep-dive documentation, data schemas, color palettes, and scoring rubric alignment, please read **[`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md)**.
-
+## 👥 CREATOR & CREDITS
+- **Architect:** Joezzy (Joezzy Web3)
+- **Email:** `girlweb367@gmail.com` / `joezzyweb3@gmail.com`
+- **Hackathon:** OpenServ SERV Hackathon Edition 01 (September 2026)
+- **Partnerships:** IXS Finance (Licensed RWA Vaults), Coinbase AgentKit (Revenue Escrow)

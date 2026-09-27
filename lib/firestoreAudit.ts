@@ -32,12 +32,12 @@ export {
   HISTORICAL_DUPLICATE_ROW_SET,
 };
 
-const TRADES_COLLECTION = 'audit_trades';
-export const TEST_TRADES_COLLECTION = 'test_audit_trades';
-export const AUDIT_STATE_COLLECTION = 'audit_state';
-export const GLOBAL_LEDGER_DOC_ID = 'global_live_ledger';
-const STATE_COLLECTION = 'autopilot_state';
-const GLOBAL_STATE_DOC = 'global_v1';
+const TRADES_COLLECTION = 'openserv_v1_trades';
+export const TEST_TRADES_COLLECTION = 'openserv_v1_test_trades';
+export const AUDIT_STATE_COLLECTION = 'openserv_v1_audit_state';
+export const GLOBAL_LEDGER_DOC_ID = 'openserv_v1_global_live_ledger';
+const STATE_COLLECTION = 'openserv_v1_autopilot_state';
+const GLOBAL_STATE_DOC = 'openserv_v1_global';
 
 /**
  * Authoritative discriminator to identify test, sanity-check, or debugging records

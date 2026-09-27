@@ -114,7 +114,7 @@ export const LiquidityDepthHeatmap: React.FC<LiquidityDepthProps> = ({ ticker = 
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           <h3 className="text-sm font-bold text-white tracking-wider flex items-center gap-2">
-            BITGET DEPTH & LIQUIDITY HEATMAP
+            INSTITUTIONAL DEPTH & LIQUIDITY HEATMAP
             <span className="text-[10px] text-yellow-400 border border-yellow-400/30 px-1.5 py-0.2 rounded bg-yellow-400/10">
               {ticker}/USDT
             </span>

@@ -668,7 +668,7 @@ export function AutonomousLoopPanel({
               <option value="MSFT">MSFT / USD (Microsoft Corp)</option>
               <option value="AVGO">AVGO / USD (Broadcom)</option>
               <option value="QQQ">QQQ / USD (Nasdaq 100 ETF)</option>
-              <option value="BGB">BGB / USDT (Bitget)</option>
+              <option value="UST10Y">UST10Y / USD (US Treasury Vault)</option>
             </select>
           </div>
 
@@ -846,12 +846,12 @@ export function AutonomousLoopPanel({
             )}
           </div>
 
-          {/* Market Feed Radar - Realtime Bitget Spot & Equities Feed */}
+          {/* Market Feed Radar - Realtime Spot & RWA Equities Feed */}
           <div className="pt-2 border-t border-white/10">
             <div className="text-[11px] text-gray-400 mb-1.5 flex items-center justify-between">
               <span className="font-semibold text-gray-300 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Market Feed Radar (Bitget Spot Realtime)
+                Market Feed Radar (Live Spot & RWA Realtime)
               </span>
               <span className="text-[10px] text-gray-500 font-mono">15% delta safeguard check</span>
             </div>
@@ -867,7 +867,7 @@ export function AutonomousLoopPanel({
                     <div className="flex items-center justify-between text-[10px] text-gray-400 mb-0.5">
                       <span className="font-bold text-white">{t}</span>
                       <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/15 text-emerald-400 font-bold">
-                        BITGET
+                        LIVE
                       </span>
                     </div>
                     <div className="font-bold text-gray-100 text-xs">

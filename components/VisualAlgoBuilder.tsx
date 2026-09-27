@@ -32,7 +32,7 @@ export function VisualAlgoBuilder({ onDeployToAutopilot }: VisualAlgoBuilderProp
     ? Math.abs(change24h) > 1.2
     : Math.abs(change24h) > 0.5;
 
-  const isFilterMet = true; // Liquidity verified on Bitget
+  const isFilterMet = true; // Liquidity verified on L2 orderbook
   const isVetoPassed = 12.0 <= 25.0; // Proposed 12% is safely below 25% cap
 
   // Trigger test signal flow evaluation across nodes with live math
@@ -85,7 +85,7 @@ export function VisualAlgoBuilder({ onDeployToAutopilot }: VisualAlgoBuilderProp
         action: 'BUY',
         size_pct: 12.0,
         confidence: isTriggerMet ? 0.94 : 0.82,
-        reasoning: `Visual Algo Builder Rule Triggered: [${conditionType}] on [${selectedAsset} (${assetClass})] at live Bitget price $${livePrice.toLocaleString()} (${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%). Bitget Risk Veto passed.`,
+        reasoning: `Visual Algo Builder Rule Triggered: [${conditionType}] on [${selectedAsset} (${assetClass})] at live price $${livePrice.toLocaleString()} (${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%). Guardian Risk Veto passed.`,
       };
 
       onDeployToAutopilot(proposal);
@@ -114,7 +114,7 @@ export function VisualAlgoBuilder({ onDeployToAutopilot }: VisualAlgoBuilderProp
               </span>
             </h3>
             <p className="text-[11px] text-gray-400">
-              Interactive node graph routing signals to Bitget simulated paper exchange.
+              Interactive node graph routing signals to simulated paper exchange.
             </p>
           </div>
         </div>
@@ -234,7 +234,7 @@ export function VisualAlgoBuilder({ onDeployToAutopilot }: VisualAlgoBuilderProp
           <ArrowRight className="w-3.5 h-3.5 text-gray-500 absolute right-0" />
         </div>
 
-        {/* STEP 4: BITGET EXECUTION ROUTER */}
+        {/* STEP 4: AUTOPILOT EXECUTION ROUTER */}
         <div
           className={`relative z-10 p-3 rounded-lg border transition-all min-w-[150px] text-center ${
             activeStep === 4
@@ -243,7 +243,7 @@ export function VisualAlgoBuilder({ onDeployToAutopilot }: VisualAlgoBuilderProp
           }`}
         >
           <div className="text-[10px] text-emerald-400 uppercase tracking-wider mb-1">Output // 04</div>
-          <div className="text-xs font-bold text-emerald-300">BITGET ORDER</div>
+          <div className="text-xs font-bold text-emerald-300">AUTOPILOT ORDER</div>
           <div className="text-[10px] text-gray-300 mt-1">
             TARGET:{' '}
             <select

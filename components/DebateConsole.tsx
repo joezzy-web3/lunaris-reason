@@ -81,9 +81,9 @@ interface GroundingInfo {
 }
 
 const PRESET_INSTRUCTIONS = [
-  'Bitget L2 Depth: Accumulate if $3M+ bid wall supports key pivot',
-  'Bitget Funding: Squeeze play if 8h funding rate stays negative',
-  'Bitget Signals: Long breakout on high sentiment velocity',
+  'L2 Depth: Accumulate if $3M+ bid wall supports key pivot',
+  'Funding Rate: Squeeze play if 8h funding rate stays negative',
+  'Market Signals: Long breakout on high sentiment velocity',
   'Evaluate breakout momentum & volume profile',
   'Quant review on earnings & tokenized equity spread',
   'Delta-neutral liquidity capture with 0.5% max slippage collar',
@@ -822,7 +822,7 @@ export function DebateConsole({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-zinc-300 font-medium flex items-center gap-1">
                 <FileText className="w-3 h-3 text-[#00F0FF]" />
-                Add Natural Language Mandate (Synthesized with Gemini + Bitget Agent Hub Telemetry):
+                Add Natural Language Mandate (Synthesized with Gemini + OpenServ MCP Telemetry):
               </span>
               {customInstruction && (
                 <button
@@ -839,7 +839,7 @@ export function DebateConsole({
               rows={3}
               value={customInstruction}
               onChange={(e) => setCustomInstruction(e.target.value)}
-              placeholder="e.g. 'Buy $2k SOL if Bitget orderbook bid wall holds above $130 with 0.5% max slippage collar' or 'Short TSLA if perpetual funding rate spikes positive' or 'Accumulate BTC on dips'"
+              placeholder="e.g. 'Buy $2k SOL if orderbook bid wall holds above $130 with 0.5% max slippage collar' or 'Short TSLA if perpetual funding rate spikes positive' or 'Accumulate BTC on dips'"
               className="w-full bg-[#07080c] border border-white/15 focus:border-[#00F0FF]/50 rounded-md p-2.5 text-xs text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-[#00F0FF]/30 outline-none font-sans"
             />
             {/* Quick Instruction Presets */}
@@ -1300,7 +1300,7 @@ export function DebateConsole({
               <div className="font-bold flex items-center gap-1.5 text-[10px] text-white">
                 <Flame className="w-3.5 h-3.5 text-[#FF5722] fill-[#FF9800]/50 drop-shadow-[0_0_5px_rgba(255,87,34,0.6)] shrink-0" /> Quant-Omega Signoff
               </div>
-              <div className="text-[9px] text-[#00F0FF] font-mono mt-0.5 font-semibold">Bitget L2 Depth Engine</div>
+              <div className="text-[9px] text-[#00F0FF] font-mono mt-0.5 font-semibold">OpenServ L2 Depth Engine</div>
               <p className="text-zinc-400 text-[10px] mt-0.5">
                 Momentum confirmed (+{verdict.takeProfitPct}% target). Accepted {verdict.optimalSizePct}% sizing allocation.
               </p>
@@ -1310,7 +1310,7 @@ export function DebateConsole({
               <div className="font-bold flex items-center gap-1.5 text-[10px] text-white">
                 <Shield className="w-3.5 h-3.5 text-[#8B5A2B] fill-[#5C3A21]/40 shrink-0" /> Guardian-01 Signoff
               </div>
-              <div className="text-[9px] text-amber-400 font-mono mt-0.5 font-semibold">Bitget Guarded Router (0.5% Collar)</div>
+              <div className="text-[9px] text-amber-400 font-mono mt-0.5 font-semibold">OpenServ Guarded Router (0.5% Collar)</div>
               <p className="text-zinc-400 text-[10px] mt-0.5">
                 Downside bounded. Hard stop-loss armed at -{verdict.stopLossPct}% (${verdict.stopLossPrice}).
               </p>
@@ -1320,7 +1320,7 @@ export function DebateConsole({
               <div className="font-bold flex items-center gap-1.5 text-[10px] text-white">
                 <Globe2 className="w-3.5 h-3.5 text-[#0284C7] fill-[#22C55E]/40 drop-shadow-[0_0_5px_rgba(2,132,199,0.5)] shrink-0" /> Atlas-Macro Signoff
               </div>
-              <div className="text-[9px] text-cyan-300 font-mono mt-0.5 font-semibold">Bitget Funding & OI Telemetry</div>
+              <div className="text-[9px] text-cyan-300 font-mono mt-0.5 font-semibold">Funding & OI Telemetry</div>
               <p className="text-zinc-400 text-[10px] mt-0.5">
                 Macro orderflow and {verdict.riskRewardRatio}:1 asymmetric structure ratified for execution.
               </p>
@@ -1330,7 +1330,7 @@ export function DebateConsole({
               <div className="font-bold flex items-center gap-1.5 text-[10px] text-rose-300">
                 <Skull className="w-3.5 h-3.5 text-rose-400 shrink-0" /> NEXUS-RED Adversarial Audit
               </div>
-              <div className="text-[9px] text-rose-300 font-mono mt-0.5 font-semibold">Bitget Market Signals Stress-Test</div>
+              <div className="text-[9px] text-rose-300 font-mono mt-0.5 font-semibold">Market Signals Stress-Test</div>
               <p className="text-zinc-400 text-[10px] mt-0.5">
                 Orderbook trap verified. Stress-tested against adverse cascades; limit fill bounds enforced.
               </p>
@@ -1387,7 +1387,7 @@ export function DebateConsole({
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" /> DISPATCH TO LUNARIS AUTOPILOT (VIA BITGET GUARDED EXECUTION)
+                <Send className="w-4 h-4" /> DISPATCH TO LUNARIS AUTOPILOT
               </>
             )}
           </button>

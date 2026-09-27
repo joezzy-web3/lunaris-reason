@@ -89,19 +89,19 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     {
       id: 'cmd-nlp-strategy-compiler',
       category: 'AGENTIC_ACTION',
-      title: 'Open Natural Language Strategy Compiler (Bitget MCP)',
-      description: 'Type plain English trading mandates compiled into guarded Bitget Agent Hub tool schemas',
-      badge: 'Bitget MCP',
+      title: 'Open Natural Language Strategy Compiler (Model Context Protocol)',
+      description: 'Type plain English trading mandates compiled into guarded autonomous tool schemas',
+      badge: 'OpenServ MCP',
       action: () => {
         onClose();
         if (onOpenIntentCompiler) onOpenIntentCompiler();
       },
     },
     {
-      id: 'cmd-bitget-swarm-inspector',
+      id: 'cmd-swarm-inspector',
       category: 'AGENTIC_ACTION',
-      title: 'Inspect Bitget Agent Hub Multi-Agent Swarm',
-      description: 'View 4 autonomous agents calling Bitget Orderbook, Funding Rate, and Signals APIs with Guardian Veto',
+      title: 'Inspect Multi-Agent Swarm Registry',
+      description: 'View 4 autonomous agents calling Orderbook, Yield Spread, and Signals APIs with Guardian Veto',
       badge: 'Swarm Registry',
       action: () => {
         onNavigateTab('TERMINAL');
@@ -125,7 +125,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'cmd-hedge-eth-sol',
       category: 'AGENTIC_ACTION',
       title: 'Hedge 30% of ETH exposure with SOL short',
-      description: 'Deploy synthetic inverse perp delta-neutral pairs hedge on Bitget liquidity pool',
+      description: 'Deploy synthetic inverse perp delta-neutral pairs hedge on institutional liquidity pool',
       badge: 'Autopilot Route',
       action: () => {
         onNavigateTab('AUTOPILOT');
@@ -221,7 +221,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     {
       id: 'cmd-activity-stream',
       category: 'BACKTEST_SIM',
-      title: 'Inspect Multi-Agent Activity Stream (Bitget Telemetry)',
+      title: 'Inspect Multi-Agent Activity Stream (Telemetry)',
       description: 'Review chronological logs of Quant-Omega, Atlas-Macro, Sigma-Pulse, and Guardian-01 with live jump triggers',
       badge: 'Live Stream',
       action: () => {
@@ -234,8 +234,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'cmd-council-nlp',
       category: 'COUNCIL_INQUIRY',
       title: 'Speak Natural Language Mandate to Council',
-      description: 'Direct the 4-agent Council with plain-English instructions synthesized via Gemini & Bitget MCP',
-      badge: 'Gemini + Bitget',
+      description: 'Direct the 4-agent Council with plain-English instructions synthesized via Gemini & OpenServ MCP',
+      badge: 'Gemini + MCP',
       action: () => {
         onNavigateTab('COUNCIL');
         onClose();
@@ -244,9 +244,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     {
       id: 'cmd-open-audit-ledger',
       category: 'BACKTEST_SIM',
-      title: 'Open Bitget S2 Official Paper-Trading Audit Ledger',
-      description: 'Inspect complete Track 2 trade settlement receipts, Sharpe ratio, and compliance hashes',
-      badge: 'Track 2 S2',
+      title: 'Open Official Paper-Trading Audit Ledger',
+      description: 'Inspect complete trade settlement receipts, Sharpe ratio, and compliance hashes',
+      badge: 'Audit Ledger',
       action: () => {
         if (onOpenAuditLedger) onOpenAuditLedger();
         else onNavigateTab('AUDIT');

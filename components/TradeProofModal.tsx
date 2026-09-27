@@ -121,12 +121,12 @@ Margin Used (Collateral): $${math.marginUsed.toFixed(2)} USDT
 Position Notional (Margin x Lev): $${math.positionNotional.toFixed(2)} USDT
 Quantity (Asset Units): ${math.assetQuantity} ${baseAsset}
 Gross P&L: ${math.grossPnL >= 0 ? '+' : ''}$${math.grossPnL.toFixed(2)} USDT
-Bitget Taker Fee (${(math.feeRate * 100).toFixed(2)}%): -$${math.totalFees.toFixed(2)} USDT
+Taker Fee (${(math.feeRate * 100).toFixed(2)}%): -$${math.totalFees.toFixed(2)} USDT
 L2 Orderbook Slippage (${math.slippageBps.toFixed(1)} bps): -$${math.slippageCost.toFixed(2)} USDT
 Net Realized P&L: ${trade.balanceChange >= 0 ? '+' : ''}$${trade.balanceChange.toFixed(2)} USDT
 ROI on Margin: ${((trade.balanceChange / math.marginUsed) * 100).toFixed(2)}%
 Direction Validation: ${math.isDirectionValid ? 'PASS (Price move matches Gross P&L)' : 'FAIL'}
-Execution Model: Bitget Published VIP-0 Taker Fee + Dynamic L2 Slippage
+Execution Model: Standard VIP-0 Taker Fee + Dynamic L2 Slippage
 Mathematical Source of Truth: Verified
 =======================================`;
     navigator.clipboard.writeText(proofText);
@@ -138,7 +138,7 @@ Mathematical Source of Truth: Verified
     playCyberClick();
     const receiptData = {
       title: 'LUNARIS_INSTITUTIONAL_EXECUTION_RECEIPT',
-      program: 'Bitget AI Base Camp S2 // Track 2 Agentic Trading',
+      program: 'OpenServ SERV Hackathon Edition 01 // Track 3 RWA Vaults & SERV Reasoning',
       tradeId: trade.id,
       timestampUTC: trade.timestamp,
       verificationHash: executionHash,
@@ -174,8 +174,8 @@ Mathematical Source of Truth: Verified
         riskCircuitClearance: 'APPROVED (VaR < 25%)',
       },
       microstructureOrderbookTelemetry: {
-        venue: 'Bitget Simulated L2 Orderbook Liquidity Pool',
-        feeModel: 'Bitget Published VIP-0 Taker Fee (0.06% Crypto / 0.10% rTokens) + Dynamic L2 Slippage',
+        venue: 'Institutional Simulated L2 Orderbook Liquidity Pool',
+        feeModel: 'Standard Published VIP-0 Taker Fee (0.06% Crypto / 0.08% RWA) + Dynamic L2 Slippage',
         takerFeeRate: `${(math.feeRate * 100).toFixed(2)}%`,
         slippageBps: `${math.slippageBps.toFixed(1)} bps`,
         fillLatencyMs: '3.8ms',
@@ -536,7 +536,7 @@ Mathematical Source of Truth: Verified
                   {/* 7. Fees */}
                   <div className="bg-black/40 border border-white/5 p-2.5 rounded-lg flex justify-between items-center">
                     <div>
-                      <span className="text-[10px] text-zinc-400 block uppercase">7. Taker Fee (Bitget VIP-0)</span>
+                      <span className="text-[10px] text-zinc-400 block uppercase">7. Taker Fee (VIP-0 Standard)</span>
                       <span className="text-zinc-500 text-[10px]">Round-trip 2 &times; ${(math.positionNotional * math.feeRate).toFixed(2)} ({(math.feeRate * 100).toFixed(2)}%)</span>
                     </div>
                     <span className="text-rose-400 font-bold text-xs">-${math.totalFees.toFixed(2)} USDT</span>
@@ -784,7 +784,7 @@ Mathematical Source of Truth: Verified
           {activeTab === 'ORDERBOOK' && (
             <div className="space-y-3 text-xs">
               <div className="text-xs text-zinc-400">
-                Simulated microstructural execution telemetry on Bitget orderbook depth:
+                Simulated microstructural execution telemetry on institutional orderbook depth:
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -801,7 +801,7 @@ Mathematical Source of Truth: Verified
                 </div>
 
                 <div className="bg-[#07080d] border border-white/10 p-3.5 rounded-xl space-y-1">
-                  <div className="text-[10px] text-zinc-500 uppercase">Simulated Bitget Fee Tier</div>
+                  <div className="text-[10px] text-zinc-500 uppercase">Simulated Fee Tier</div>
                   <div className="text-sm font-bold text-white">VIP-0 (0.02% / 0.04%)</div>
                   <div className="text-[10px] text-zinc-400">Deducted from realized PnL</div>
                 </div>
@@ -818,7 +818,7 @@ Mathematical Source of Truth: Verified
                 <div className="text-[11px] text-zinc-300 space-y-1 font-mono">
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Venue:</span>
-                    <span>Bitget Paper Trading Exchange Gateway</span>
+                    <span>OpenServ Paper Trading Execution Gateway</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Order Type:</span>

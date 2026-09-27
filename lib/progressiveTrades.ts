@@ -14,7 +14,7 @@ import { PaperTradeRecord, resolveTradePrices } from './tradeTypes';
 import { MAX_SLIPPAGE_PCT, enforceSlippageCollar } from './riskVeto';
 import AUDIT_TRADES_JSON from '../data/seed_audit_trades.json';
 
-export const AUTOPILOT_CADENCE_MS = 14000; // 14-second standard cadence matching UI countdown
+export const AUTOPILOT_CADENCE_MS = 60000; // 60-second standard cadence matching UI countdown
 
 // High-speed, deterministic 32-bit PRNG (Mulberry32)
 export function mulberry32(seed: number): () => number {
@@ -26,27 +26,26 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
-// Canonical candidate instrument pool
+// Canonical candidate instrument pool - RWA Centered with Real Yields & Commodities
 export const PROGRESSIVE_INSTRUMENTS = [
-  { name: 'NVDAon/USDT', ticker: 'NVDAon', fallbackPrice: 128.4, class: 'rToken', leverage: 2 },
-  { name: 'TSLAon/USDT', ticker: 'TSLAon', fallbackPrice: 248.0, class: 'rToken', leverage: 2 },
-  { name: 'BTC/USDT', ticker: 'BTC', fallbackPrice: 76820.0, class: 'Crypto', leverage: 5 },
-  { name: 'ETH/USDT', ticker: 'ETH', fallbackPrice: 2485.0, class: 'Crypto', leverage: 4 },
-  { name: 'SOL/USDT', ticker: 'SOL', fallbackPrice: 99.66, class: 'Crypto', leverage: 3 },
-  { name: 'PLTR/USD', ticker: 'PLTR', fallbackPrice: 68.7, class: 'US Equity', leverage: 2 },
-  { name: 'MARA/USD', ticker: 'MARA', fallbackPrice: 19.8, class: 'US Equity', leverage: 2 },
-  { name: 'MSFT/USD', ticker: 'MSFT', fallbackPrice: 418.5, class: 'US Equity', leverage: 2 },
-  { name: 'AVGO/USD', ticker: 'AVGO', fallbackPrice: 172.5, class: 'US Equity', leverage: 2 },
-  { name: 'QQQ/USD', ticker: 'QQQ', fallbackPrice: 492.0, class: 'Index ETF', leverage: 2 },
+  { name: 'UST10Y/USD', ticker: 'UST10Y', fallbackPrice: 106.2, class: 'RWA Vault', leverage: 1 },
+  { name: 'TBILL/USD', ticker: 'TBILL', fallbackPrice: 100.15, class: 'RWA Vault', leverage: 1 },
+  { name: 'PAXG/USDT', ticker: 'PAXG', fallbackPrice: 2681.9, class: 'RWA Commodity', leverage: 2 },
+  { name: 'WTI/USD', ticker: 'WTI', fallbackPrice: 71.3, class: 'RWA Commodity', leverage: 2 },
+  { name: 'REIT/USD', ticker: 'REIT', fallbackPrice: 88.4, class: 'RWA Vault', leverage: 1 },
+  { name: 'XAG/USD', ticker: 'XAG', fallbackPrice: 31.85, class: 'RWA Commodity', leverage: 2 },
+  { name: 'BTC/USDT', ticker: 'BTC', fallbackPrice: 85465.0, class: 'Crypto Collateral', leverage: 3 },
+  { name: 'ETH/USDT', ticker: 'ETH', fallbackPrice: 2722.45, class: 'Crypto Collateral', leverage: 3 },
+  { name: 'SOL/USDT', ticker: 'SOL', fallbackPrice: 116.95, class: 'Crypto Collateral', leverage: 2 },
 ] as const;
 
 /**
- * Returns remaining seconds until next global 14-second UTC execution tick.
+ * Returns remaining seconds until next global 60-second UTC execution tick.
  * Synchronized across all users on Earth to the universal clock.
  */
 export function getSecondsUntilNextTick(nowMs: number = Date.now()): number {
-  const mod = Math.floor(nowMs / 1000) % 14;
-  return 14 - mod;
+  const mod = Math.floor(nowMs / 1000) % 60;
+  return 60 - mod;
 }
 
 /**
@@ -89,12 +88,12 @@ export function generateDeterministicTradeRecord(
   if (isWin) {
     pnlPct = parseFloat((3.2 + rng() * 5.4).toFixed(2)); // +3.2% to +8.6%
     status = 'TAKE_PROFIT';
-    if (inst.class === 'rToken') {
-      trigger = `Council Quorum: ${inst.name} tokenized liquidity depth ratified + Atlas-Macro correlation`;
-    } else if (inst.class === 'US Equity' || inst.class === 'Index ETF') {
-      trigger = `Council Alpha: ${inst.name} US Equity momentum breakout + Cross-Asset Macro confirmation`;
+    if (inst.class === 'RWA Vault') {
+      trigger = `OpenServ SERV Reasoning: ${inst.name} dynamic yield vault rebalance approved by Atlas-Macro (5.15%-6.40% APY)`;
+    } else if (inst.class === 'RWA Commodity') {
+      trigger = `Council Quorum: ${inst.name} physical asset NAV arbitrage (-24 bps basis discount captured)`;
     } else {
-      trigger = `Autopilot Pulse: ${inst.name} Social Velocity spike (>82) + Quant-Omega Orderbook absorption`;
+      trigger = `Autopilot Pulse: ${inst.name} crypto momentum surge + RWA cross-hedge ratified by Guardian-01`;
     }
   } else {
     pnlPct = -parseFloat((1.8 + rng() * 1.5).toFixed(2)); // -1.8% to -3.3% hard risk stop
@@ -104,7 +103,7 @@ export function generateDeterministicTradeRecord(
 
   // 7. Dynamic Fee & Slippage Model (Bitget Published VIP-0 Standard)
   const notional = quantity * leverage;
-  const feeRate = inst.class === 'rToken' || inst.class === 'US Equity' || inst.class === 'Index ETF' ? 0.0010 : 0.0006;
+  const feeRate = inst.class === 'RWA Vault' || inst.class === 'RWA Commodity' ? 0.0008 : 0.0006;
   const totalFees = parseFloat((notional * feeRate * 2).toFixed(2));
   // Dynamic L2 orderbook slippage (base 2 bps + depth factor)
   const slippageRate = 0.0002 + Math.min(0.0003, (notional / 50000) * 0.0002);

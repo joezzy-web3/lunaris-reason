@@ -93,7 +93,7 @@ const AGENT_CONFIG: Record<
 > = {
   'Quant-Omega': {
     role: 'Orderflow Momentum & Microstructure Engine',
-    tech: 'Bitget L2 Depth Engine',
+    tech: 'OpenServ L2 Depth Engine',
     color: 'text-emerald-400',
     border: 'border-emerald-500/30',
     bg: 'bg-emerald-950/20',
@@ -103,7 +103,7 @@ const AGENT_CONFIG: Record<
   },
   'Atlas-Macro': {
     role: 'Cross-Asset Correlator & Funding Telemetry',
-    tech: 'Bitget Derivs & Funding API',
+    tech: 'Derivatives & Funding Telemetry',
     color: 'text-blue-400',
     border: 'border-blue-500/30',
     bg: 'bg-blue-950/20',
@@ -113,7 +113,7 @@ const AGENT_CONFIG: Record<
   },
   'Sigma-Pulse': {
     role: 'Social Velocity & Whale Inflow Radar',
-    tech: 'Bitget Market Signals API',
+    tech: 'Market Signals Stream',
     color: 'text-purple-400',
     border: 'border-purple-500/30',
     bg: 'bg-purple-950/20',
@@ -123,7 +123,7 @@ const AGENT_CONFIG: Record<
   },
   'Guardian-01': {
     role: 'Deterministic Risk Arbiter & Circuit Breaker',
-    tech: 'Bitget Guarded Router (0.5% Collar)',
+    tech: 'OpenServ Guarded Router (0.5% Collar)',
     color: 'text-amber-400',
     border: 'border-amber-500/30',
     bg: 'bg-amber-950/20',
@@ -133,7 +133,7 @@ const AGENT_CONFIG: Record<
   },
   'Autopilot Daemon': {
     role: 'Autonomous Execution & Position Management',
-    tech: 'Bitget S2 Paper Settlement',
+    tech: 'OpenServ Paper Settlement',
     color: 'text-cyan-400',
     border: 'border-cyan-500/30',
     bg: 'bg-cyan-950/20',
@@ -159,7 +159,7 @@ const INITIAL_ACTIVITIES: AgentActivityItem[] = [
     agent: 'Quant-Omega',
     role: 'Orderflow Momentum & Microstructure Engine',
     action: 'Quant-Omega detected orderbook bid cluster on BTC',
-    details: 'Bitget L2 Depth Engine registered +$3.42M cluster buy wall aggregating at $62,850 on spot book. Bid skew shifted to +24.1%.',
+    details: 'OpenServ L2 Depth Engine registered +$3.42M cluster buy wall aggregating at $62,850 on spot book. Bid skew shifted to +24.1%.',
     asset: 'BTC',
     metric: '+$3.42M Inflow (L2)',
     level: 'bullish',
@@ -172,7 +172,7 @@ const INITIAL_ACTIVITIES: AgentActivityItem[] = [
     agent: 'Sigma-Pulse',
     role: 'Social Velocity & Whale Inflow Radar',
     action: 'Sigma-Pulse updated BTC sentiment velocity to Bearish',
-    details: 'Bitget Market Signals telemetry flagged sentiment velocity contraction of -18.4% in 15m window; social mentions indicate macro liquidity drag.',
+    details: 'Market Signals telemetry flagged sentiment velocity contraction of -18.4% in 15m window; social mentions indicate macro liquidity drag.',
     asset: 'BTC',
     metric: 'Mood: 38 (Fear)',
     level: 'bearish',
@@ -185,7 +185,7 @@ const INITIAL_ACTIVITIES: AgentActivityItem[] = [
     agent: 'Guardian-01',
     role: 'Deterministic Risk Arbiter & Circuit Breaker',
     action: 'Enforced 0.5% Slippage Collar on SOL/USDT',
-    details: 'Bitget Guarded Router clamped execution price to $134.82 to preserve strict profit corridor and reject aggressive taker slippage.',
+    details: 'OpenServ Guarded Router clamped execution price to $134.82 to preserve strict profit corridor and reject aggressive taker slippage.',
     asset: 'SOL',
     metric: 'Collar: 0.50% Clamped',
     level: 'warning',
@@ -211,7 +211,7 @@ const INITIAL_ACTIVITIES: AgentActivityItem[] = [
     agent: 'Autopilot Daemon',
     role: 'Autonomous Execution & Position Management',
     action: 'Executed LONG trade entry on ETH/USDT (3x Margin)',
-    details: 'Council quorum reached (3-1 majority). Sized 1,200 USDT collateral via Bitget Order Router with trailing stop armed at $2,410.',
+    details: 'Council quorum reached (3-1 majority). Sized 1,200 USDT collateral via Guarded Order Router with trailing stop armed at $2,410.',
     asset: 'ETH',
     metric: '3x Long • Sized $3,600',
     level: 'execution',
@@ -224,7 +224,7 @@ const INITIAL_ACTIVITIES: AgentActivityItem[] = [
     agent: 'Atlas-Macro',
     role: 'Cross-Asset Correlator & Funding Telemetry',
     action: 'Cross-asset basis spread alert: TSLAon vs Crypto Beta',
-    details: 'Bitget tokenized TSLAon correlation to BTC decoupled to 0.12. Hedged pair allocation proposed for volatility buffer.',
+    details: 'Tokenized TSLAon correlation to BTC decoupled to 0.12. Hedged pair allocation proposed for volatility buffer.',
     asset: 'TSLAon',
     metric: 'Correlation: 0.12',
     level: 'info',
@@ -258,7 +258,7 @@ const AUTONOMOUS_EVENT_TEMPLATES: Array<{
     agent: 'Quant-Omega',
     action: (asset) => `Quant-Omega detected orderbook bid cluster on ${asset}`,
     details: (asset, n) =>
-      `Accumulation order packet detected via Bitget L2 Depth Engine (+${n}M notional). Orderbook bid/ask ratio spiked to 2.4x.`,
+      `Accumulation order packet detected via OpenServ L2 Depth Engine (+${n}M notional). Orderbook bid/ask ratio spiked to 2.4x.`,
     metric: (_, n) => `+$${n}M L2 Cluster`,
     level: 'bullish',
     targetModule: 'DEPTH',
@@ -267,7 +267,7 @@ const AUTONOMOUS_EVENT_TEMPLATES: Array<{
     agent: 'Sigma-Pulse',
     action: (asset) => `Sigma-Pulse updated ${asset} outlook to Bullish`,
     details: (asset, n) =>
-      `Social sentiment velocity accelerated across Farcaster & CryptoTwitter via Bitget Market Signals. Bullish mention volume +${n}% in 5m.`,
+      `Social sentiment velocity accelerated across Farcaster & CryptoTwitter via Market Signals. Bullish mention volume +${n}% in 5m.`,
     metric: (_, n) => `Velocity +${n}%`,
     level: 'bullish',
     targetModule: 'PULSE',
@@ -276,7 +276,7 @@ const AUTONOMOUS_EVENT_TEMPLATES: Array<{
     agent: 'Sigma-Pulse',
     action: (asset) => `Sigma-Pulse updated ${asset} outlook to Bearish`,
     details: (asset, n) =>
-      `Bearish divergence detected in derivative discussion threads. Funding rate skew dropped -${n} bps via Bitget Signals.`,
+      `Bearish divergence detected in derivative discussion threads. Funding rate skew dropped -${n} bps via Market Signals.`,
     metric: (_, n) => `Risk Skew -${n}bps`,
     level: 'bearish',
     targetModule: 'PULSE',
@@ -285,7 +285,7 @@ const AUTONOMOUS_EVENT_TEMPLATES: Array<{
     agent: 'Guardian-01',
     action: (asset) => `Guardian-01 Risk Veto: Verified 0.5% slippage collar for ${asset}`,
     details: (asset, n) =>
-      `Bitget Guarded Router bound execution price strictly to within 0.5% allowable spread. Quorum safety invariant validated.`,
+      `OpenServ Guarded Router bound execution price strictly to within 0.5% allowable spread. Quorum safety invariant validated.`,
     metric: () => 'Collar: OK (<0.5%)',
     level: 'warning',
     targetModule: 'CHART',
@@ -301,9 +301,9 @@ const AUTONOMOUS_EVENT_TEMPLATES: Array<{
   },
   {
     agent: 'Atlas-Macro',
-    action: (asset) => `Atlas-Macro: Bitget 24h Funding Rate scan completed for ${asset}`,
+    action: (asset) => `Atlas-Macro: 24h Funding Rate scan completed for ${asset}`,
     details: (asset, n) =>
-      `Annualized funding spread calculated at +${n}% via Bitget Derivs API. Long bias remains viable with manageable carry cost.`,
+      `Annualized funding spread calculated at +${n}% via Derivatives API. Long bias remains viable with manageable carry cost.`,
     metric: (_, n) => `Funding: +0.0${n}%`,
     level: 'info',
     targetModule: 'COUNCIL',
@@ -312,7 +312,7 @@ const AUTONOMOUS_EVENT_TEMPLATES: Array<{
     agent: 'Autopilot Daemon',
     action: (asset) => `Autopilot Daemon: Rebalanced paper margin on ${asset}`,
     details: (asset, n) =>
-      `Adjusted trailing stop-loss corridor upwards to lock in unrealized PnL via Bitget S2 Paper Engine. Active leverage fixed at 3x.`,
+      `Adjusted trailing stop-loss corridor upwards to lock in unrealized PnL via OpenServ Paper Engine. Active leverage fixed at 3x.`,
     metric: (_, n) => `Trail Stop +${n}%`,
     level: 'execution',
     targetModule: 'AUTOPILOT',
@@ -373,7 +373,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
           agent: 'Guardian-01',
           role: AGENT_CONFIG['Guardian-01'].role,
           action: 'Deterministic Risk Invariant & Kill-Switch Telemetry',
-          details: `Audited portfolio risk envelope. Single-asset allocation capped at 25.0% VaR ceiling. Hard stop-loss invariant armed at -10.0% on Bitget execution router.`,
+          details: `Audited portfolio risk envelope. Single-asset allocation capped at 25.0% VaR ceiling. Hard stop-loss invariant armed at -10.0% on guarded execution router.`,
           asset,
           metric: '100% Invariant Pass',
           level: 'alert',
@@ -384,7 +384,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
         return;
       }
 
-      // Case 2: Crypto Assets -> Real Bitget L2 Orderbook Depth Scan
+      // Case 2: Crypto Assets -> Real L2 Orderbook Depth Scan
       if (asset === 'BTC' || asset === 'ETH' || asset === 'SOL') {
         try {
           const controller = new AbortController();
@@ -423,7 +423,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
               timestamp: Date.now(),
               agent: 'Quant-Omega',
               role: AGENT_CONFIG['Quant-Omega'].role,
-              action: `Bitget L2 Depth Scan: ${isHeavyBid ? 'Bid Wall Accumulation' : 'Ask Liquidity Resistance'} on ${asset}USDT`,
+              action: `L2 Depth Scan: ${isHeavyBid ? 'Bid Wall Accumulation' : 'Ask Liquidity Resistance'} on ${asset}USDT`,
               details: `Real-time top 15 book: Bid depth $${(bidVolUsd).toLocaleString('en-US', { maximumFractionDigits: 0 })} vs Ask depth $${(askVolUsd).toLocaleString('en-US', { maximumFractionDigits: 0 })}. Imbalance ratio: ${imbalanceRatio}x (${bidRatio.toFixed(1)}% bid weight).`,
               asset,
               metric: `${bidRatio.toFixed(0)}% Bid Weight`,
@@ -525,7 +525,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
 
     const advisorySnapshot = selectedAdvisory;
 
-    // Step 1: Synthesizing Advisory & Querying Bitget Microstructure
+    // Step 1: Synthesizing Advisory & Querying Microstructure
     setTimeout(() => {
       setConsultingStep(2);
       playCyberClick();
@@ -822,7 +822,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
                       {act.targetModule === 'STATARB' && 'Cross-Asset StatArb Matrix'}
                       {act.targetModule === 'AUTOPILOT' && 'Autopilot Loop Execution'}
                       {act.targetModule === 'COUNCIL' && 'Council Debate Tribunal'}
-                      {act.targetModule === 'AUDIT' && 'Bitget S2 Audit Ledger'}
+                      {act.targetModule === 'AUDIT' && 'Official Audit Ledger'}
                       {act.targetModule === 'KILLSWITCH' && 'Deterministic Kill-Switch'}
                     </span>
                   </div>
@@ -985,7 +985,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
                   </div>
                   <p className="text-[11px] text-zinc-300 leading-relaxed">
                     <b>{selectedAdvisory.asset}</b> is outside the default Lunaris Risk-Screened Universe.
-                    To safeguard capital, Guardian-01 restricts automated execution on unverified pairs without verified Bitget orderbook liquidity.
+                    To safeguard capital, Guardian-01 restricts automated execution on unverified pairs without verified orderbook liquidity.
                   </p>
                 </div>
 
@@ -1077,7 +1077,7 @@ export const AgentActivityStream: React.FC<AgentActivityStreamProps> = ({
               <div className="flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.03] border border-white/5 text-xs">
                 <span className={`w-2 h-2 rounded-full ${consultingStep >= 1 ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
                 <span className={consultingStep >= 1 ? 'text-zinc-200' : 'text-zinc-500'}>
-                  1. Ingesting {selectedAdvisory.agent} signal & Bitget L2 orderbook
+                  1. Ingesting {selectedAdvisory.agent} signal & L2 orderbook
                 </span>
               </div>
 

@@ -1,11 +1,1 @@
-{
-  "isExecuting": true,
-  "isTurbo": false,
-  "cashBalance": 100000.0,
-  "positions": {},
-  "ledger": [],
-  "autoExitPct": 3,
-  "maxOpenPositions": 3,
-  "cycleCount": 0,
-  "lastUpdated": "2026-09-27T21:46:00.000Z"
-}
+{"isExecuting":true,"isTurbo":false,"cashBalance":94000,"positions":{"SUI":{"ticker":"SUI","amount":4772.89,"entryPrice":1.2571,"currentPrice":1.2571,"unrealizedPnl":0,"unrealizedPnlPct":0,"class":"CX"}},"ledger":[{"id":"buy-1790547157743-3-qv157-SUI","timestamp":"10:12:37 PM","utcTimestamp":"2026-09-27T22:12:37.743Z","type":"BUY","ticker":"SUI","amount":4772.89,"price":1.2571,"totalUsd":6000,"balanceBefore":100000,"balanceAfter":94000,"realizedPnl":0,"realizedPnlPct":0,"notes":"Council Quorum Buy Signal: Deployed $6,000 into 4772.8900 SUI at $1.257."}],"autoExitPct":3,"maxOpenPositions":3,"cycleCount":1,"lastUpdated":"2026-09-27T22:12:37.747Z"}

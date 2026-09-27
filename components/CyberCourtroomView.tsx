@@ -1,5 +1,5 @@
 // components/CyberCourtroomView.tsx
-// High-Octane "Cyber-Tribunal: Bitget High Court of Trading Alpha"
+// High-Octane "Cyber-Tribunal: High Court of Trading Alpha"
 // Live Animated Multi-Agent Courtroom Cross-Examination & Gavel Slam
 // Calm, eye-resting dark aesthetic matching the official Council theme
 
@@ -654,7 +654,7 @@ export const CyberCourtroomView: React.FC<CyberCourtroomViewProps> = ({
                 <p className="font-mono text-[9px] text-zinc-400 font-bold uppercase mb-1">
                   &gt; Macroeconomic &amp; Funding Telemetry:
                 </p>
-                "{macroTurn ? macroTurn.speech : 'Reviewing global liquidity context and Bitget funding rates.'}"
+                "{macroTurn ? macroTurn.speech : 'Reviewing global liquidity context and perpetual funding rates.'}"
               </div>
             </div>
           </div>
@@ -705,7 +705,7 @@ export const CyberCourtroomView: React.FC<CyberCourtroomViewProps> = ({
         {selectedExhibit === 'ORDERBOOK' && (
           <div className="bg-black/50 border border-white/10 rounded-lg p-2.5 text-xs space-y-1.5">
             <span className="text-[10px] text-zinc-400 font-bold block uppercase">
-              Exhibit A // Bitget Live Orderbook Depth:
+              Exhibit A // Institutional Live Orderbook Depth:
             </span>
             <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
               <div className="bg-white/5 p-2 rounded border border-white/5">
@@ -726,7 +726,7 @@ export const CyberCourtroomView: React.FC<CyberCourtroomViewProps> = ({
         {selectedExhibit === 'FUNDING' && (
           <div className="bg-black/50 border border-white/10 rounded-lg p-2.5 text-xs space-y-1.5">
             <span className="text-[10px] text-zinc-400 font-bold block uppercase">
-              Exhibit B // Bitget Perpetual Funding &amp; Open Interest:
+              Exhibit B // Institutional Perpetual Funding &amp; Open Interest:
             </span>
             <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
               <div className="bg-white/5 p-2 rounded border border-white/5">

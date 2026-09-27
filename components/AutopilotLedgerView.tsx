@@ -191,7 +191,7 @@ export function AutopilotLedgerView({
   return (
     <div className="space-y-4 font-mono">
       {/* Top Ledger Summary Bento Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <div className="bg-black/60 border border-zinc-800 rounded-lg p-3">
           <div className="flex items-center justify-between text-[11px] text-zinc-400">
             <span>TODAY'S REALIZED PNL (UTC)</span>
@@ -201,7 +201,7 @@ export function AutopilotLedgerView({
             {stats.totalRealizedPnl >= 0 ? '+' : ''}${stats.totalRealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className="text-[10px] text-zinc-500 mt-0.5">
-            Across {stats.closedTrades} closed events today (prior days scrapped)
+            Across {stats.closedTrades} closed events today
           </div>
         </div>
 
@@ -236,6 +236,17 @@ export function AutopilotLedgerView({
             ${stats.totalVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div className="text-[10px] text-zinc-500 mt-0.5">{ledger.length} total recorded entries</div>
+        </div>
+
+        <div className="bg-black/60 border border-cyan-500/30 rounded-lg p-3 bg-cyan-950/10">
+          <div className="flex items-center justify-between text-[11px] text-cyan-300">
+            <span>AGENTKIT ESCROW TOLL</span>
+            <DollarSign className="w-3.5 h-3.5 text-cyan-400" />
+          </div>
+          <div className="text-base sm:text-lg font-bold text-cyan-300 mt-1">
+            ${(stats.totalRealizedPnl > 0 ? stats.totalRealizedPnl * 0.10 : 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="text-[10px] text-cyan-400/70 mt-0.5">10% OpenServ Escrow Routed</div>
         </div>
       </div>
 
@@ -277,9 +288,9 @@ export function AutopilotLedgerView({
             onChange={(e) => setManualTicker(e.target.value)}
             className="bg-black/60 border border-zinc-700 text-white rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-[#00F0FF]"
           >
-            <option value="BTC">BTC (Bitget Spot)</option>
-            <option value="ETH">ETH (Bitget Spot)</option>
-            <option value="SOL">SOL (Bitget Spot)</option>
+            <option value="BTC">BTC (Spot Crypto)</option>
+            <option value="ETH">ETH (Spot Crypto)</option>
+            <option value="SOL">SOL (Spot Crypto)</option>
             <option value="NVDA">NVDA (Equity)</option>
             <option value="TSLA">TSLA (Equity)</option>
             <option value="PLTR">PLTR (Palantir Tech)</option>
@@ -287,7 +298,7 @@ export function AutopilotLedgerView({
             <option value="MSFT">MSFT (Microsoft Corp)</option>
             <option value="AVGO">AVGO (Broadcom Inc)</option>
             <option value="QQQ">QQQ (Nasdaq 100 ETF)</option>
-            <option value="SUI">SUI (Bitget Spot)</option>
+            <option value="SUI">SUI (Spot Crypto)</option>
           </select>
 
           {/* Size Pills */}

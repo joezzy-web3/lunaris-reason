@@ -14,9 +14,9 @@ export function HackathonCreditsModal({ isOpen, onClose }: { isOpen: boolean; on
             <Award className="w-5 h-5 text-cyan-400" />
             <div>
               <h2 className="text-sm font-bold text-white tracking-wider">
-                BITGET AI HACKATHON — ARCHITECTURE SPECIFICATION
+                OPENSERV SERV HACKATHON EDITION 01 — ARCHITECTURE SPECIFICATION
               </h2>
-              <p className="text-[11px] text-cyan-400 font-medium">LUNARIS — "See the chain in the dark."</p>
+              <p className="text-[11px] text-cyan-400 font-medium">LUNARIS REASON — "Autonomous RWA Yield &amp; Bounded Reasoning."</p>
             </div>
           </div>
           <button
@@ -102,26 +102,16 @@ export function HackathonCreditsModal({ isOpen, onClose }: { isOpen: boolean; on
           {/* External Resource Links */}
           <div className="pt-2 border-t border-white/10 space-y-1.5">
             <h4 className="text-[11px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1">
-              <BookOpen className="w-3.5 h-3.5" /> Hackathon Resources & Verifications
+              <BookOpen className="w-3.5 h-3.5" /> Hackathon Resources &amp; Verifications
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
               <a
-                href="https://bitget.com/en/activity-hub/hackathon"
+                href="https://openserv.ai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded bg-black/40 border border-white/10 hover:border-cyan-500/40 text-cyan-400 flex items-center justify-between group transition-colors"
               >
-                <span>Bitget Activity Hub</span>
-                <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </a>
-
-              <a
-                href="https://bitget-ai.gitbook.io/bitgetai_hackathons2"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded bg-black/40 border border-white/10 hover:border-cyan-500/40 text-cyan-400 flex items-center justify-between group transition-colors"
-              >
-                <span>Hackathon Handbook</span>
+                <span>OpenServ AI Ecosystem</span>
                 <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </a>
 
@@ -136,12 +126,22 @@ export function HackathonCreditsModal({ isOpen, onClose }: { isOpen: boolean; on
               </a>
 
               <a
-                href="https://x.com/Bitget_AI"
+                href="https://x.com/openservai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded bg-black/40 border border-white/10 hover:border-blue-500/40 text-blue-400 flex items-center justify-between group transition-colors"
               >
-                <span>Bitget AI on X (@Bitget_AI)</span>
+                <span>OpenServ on X (@openservai)</span>
+                <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+
+              <a
+                href="/api/mcp/tools"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded bg-black/40 border border-white/10 hover:border-emerald-500/40 text-emerald-400 flex items-center justify-between group transition-colors"
+              >
+                <span>Live MCP Tools Schema</span>
                 <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </a>
             </div>

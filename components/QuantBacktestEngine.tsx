@@ -214,7 +214,7 @@ export const QuantBacktestEngine: React.FC<QuantBacktestEngineProps> = ({
       {/* Action CTA */}
       <div className="flex items-center justify-between pt-1">
         <span className="text-xs text-gray-400">
-          Ready to deploy parameters to Bitget simulated execution loop?
+          Ready to deploy parameters to autonomous simulated execution loop?
         </span>
         <button
           onClick={handleDeploy}

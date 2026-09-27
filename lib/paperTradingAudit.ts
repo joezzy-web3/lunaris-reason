@@ -107,7 +107,7 @@ export function resolveTradePrices(trade: Partial<PaperTradeRecord>): {
   };
 }
 
-const STORAGE_KEY = 'lunaris_v2_trades';
+const STORAGE_KEY = 'openserv_v1_trades';
 
 // LUNARIS REASON V2 Isolation (§2): Audit ledger starts at zero records.
 export const SEED_PAPER_TRADES: PaperTradeRecord[] = [];

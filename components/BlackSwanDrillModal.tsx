@@ -52,7 +52,7 @@ export const BlackSwanDrillModal: React.FC<BlackSwanDrillModalProps> = ({
     playBlackSwanAlarm();
     setDrillStage('SHOCK_TRIGGERED');
     setLogs([
-      '[00.00s] SYNTHETIC MACRO SHOCK INJECTED: Institutional flash liquidity run detected on Bitget BTC orderbook.',
+      '[00.00s] SYNTHETIC MACRO SHOCK INJECTED: Institutional flash liquidity run detected on BTC orderbook.',
       '[00.12s] BTC price plunged -8.42% in 180ms ($94,850 → $86,863). Orderbook bid depth dropped by 82%.',
     ]);
 
@@ -78,7 +78,7 @@ export const BlackSwanDrillModal: React.FC<BlackSwanDrillModalProps> = ({
             ...prev,
             '[00.48s] >>> EMERGENCY KILL-SWITCH DETERMINISTICALLY TRIPPED <<<',
             '[00.52s] [ACTION 1] 6 Open Maker & Taker Limit Orders Annihilated in 4.2ms.',
-            '[00.65s] [ACTION 2] Synthetic Delta-Neutral Inverse Hedge Deployed against Bitget Live Liquidity.',
+            '[00.65s] [ACTION 2] Synthetic Delta-Neutral Inverse Hedge Deployed against Live Liquidity.',
             '[00.78s] [ACTION 3] Portfolio VaR Locked at 0.00%. Execution loop isolated. Capital 100% shielded.',
           ]);
         }, 500);
@@ -108,7 +108,7 @@ export const BlackSwanDrillModal: React.FC<BlackSwanDrillModalProps> = ({
                 Emergency Drill // Circuit Breaker Resilience Test
               </span>
               <span className="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40 px-2 py-0.5 rounded font-bold">
-                BITGET DEFCON-1
+                DEFCON-1 ACTIVE
               </span>
             </div>
             <h2 className="text-base sm:text-lg font-bold text-white tracking-wide flex items-center gap-2">
@@ -286,7 +286,7 @@ export const BlackSwanDrillModal: React.FC<BlackSwanDrillModalProps> = ({
                   ? 'Click "Simulate Flash Crash" below to run an institutional test drill where Guardian-01 physically slams the killswitch to prevent catastrophic liquidation.'
                   : drillStage === 'CIRCUITS_HALTED'
                   ? 'Autonomous defense verified: Cancelled all open orders, initiated delta-neutral hedge, and quarantined risk exposure.'
-                  : 'Synthesizing market depth shock on Bitget live orderbook...'}
+                  : 'Synthesizing market depth shock on live orderbook...'}
               </p>
             </div>
           </div>

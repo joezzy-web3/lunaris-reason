@@ -94,7 +94,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
   // Operator Authorization Modal state to protect against unauthorized pausing
   const [isPauseAuthModalOpen, setIsPauseAuthModalOpen] = useState(false);
 
-  // Real-time Bitget market feed & tokenized equities from unified WebSocket/REST poller
+  // Real-time market feed & tokenized RWA/crypto from unified WebSocket/REST poller
   const { quotes } = useLiveMarketQuotes();
 
   // Track latest known trade count & ID to detect new server executions immediately
@@ -232,7 +232,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
         const merged = reconcileTradeCollection([...prevTrades, ...trulyNew]);
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('LUNARIS_BITGET_S2_PAPER_TRADES_V2', JSON.stringify(merged));
+            localStorage.setItem('LUNARIS_PAPER_TRADES_V2', JSON.stringify(merged));
           } catch {}
         }
         const newest = merged[merged.length - 1];
@@ -297,7 +297,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
   quotesRef.current = quotes;
   const isExecutingRef = useRef(false);
 
-  // Synchronize when the 14-second boundary is reached by strictly polling the authoritative server daemon
+  // Synchronize when the 60-second boundary is reached by strictly polling the authoritative server daemon
   const checkDaemonUpdate = useCallback(async () => {
     try {
       const summary = await fetchAuditSummary();
@@ -313,7 +313,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
     }
   }, []);
 
-  const lastExecutedSlotRef = useRef<number>(Math.floor(Date.now() / 14000));
+  const lastExecutedSlotRef = useRef<number>(Math.floor(Date.now() / 60000));
 
   // 1-second countdown timer locked to universal UTC clock for zero multi-device drift
   useEffect(() => {
@@ -326,10 +326,10 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
       const remaining = getSecondsUntilNextTick(now);
       setSecondsUntilNextTick(remaining);
 
-      const currentSlot = Math.floor(now / 14000);
+      const currentSlot = Math.floor(now / 60000);
       if (currentSlot > lastExecutedSlotRef.current) {
         lastExecutedSlotRef.current = currentSlot;
-        // Universal 14-second boundary reached across all devices
+        // Universal 60-second boundary reached across all devices
         // Advance progressive slot immediately with universal UTC seed
         try {
           const progressiveNow = generateProgressiveAuditTrades(undefined, now);
@@ -420,11 +420,11 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
       }
       const canonicalTrades = reconcileTradeCollection(exportTrades);
       const data = {
-        hackathon: 'Bitget AI Base Camp Hackathon S2',
-        track: 'Track 2 - Agentic Trading (Agent Trading)',
+        hackathon: 'OpenServ SERV Hackathon Edition 01',
+        track: 'Track 3 - RWA Vaults & SERV Reasoning',
         startingCapitalUsd: 100000.0,
         currency: 'USD',
-        baselineSpecification: 'Bitget S2 $100,000.00 USD Genesis Capital Pool',
+        baselineSpecification: 'OpenServ $100,000.00 USD Genesis Capital Pool',
         metrics: summaryMetrics || calculateAuditMetrics(canonicalTrades),
         auditLog: canonicalTrades,
       };
@@ -433,8 +433,8 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
       setTimeout(() => setCopied(false), 2500);
     } catch {
       const data = {
-        hackathon: 'Bitget AI Base Camp Hackathon S2',
-        track: 'Track 2 - Agentic Trading (Agent Trading)',
+        hackathon: 'OpenServ SERV Hackathon Edition 01',
+        track: 'Track 3 - RWA Vaults & SERV Reasoning',
         startingCapitalUsd: 100000.0,
         metrics,
         auditLog: trades,
@@ -592,7 +592,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
             {/* Cryptographically Verified Append-Only Status */}
             <div
               className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3 py-2.5 rounded-xl text-xs select-none"
-              title="Audit ledger is strictly append-only, verified against Bitget L2 orderbook, and cryptographically anchored."
+              title="Audit ledger is strictly append-only, verified against institutional L2 orderbook, and cryptographically anchored."
             >
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span className="font-mono font-bold text-[11px] tracking-wide">IMMUTABLE LEDGER</span>
@@ -601,13 +601,13 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
         </div>
       </div>
 
-      {/* Live Market Tickers Bar from Bitget API (Crypto + Tokenized Stocks) */}
+      {/* Live Market Tickers Bar (Crypto + Tokenized RWA Assets) */}
       <div className="bg-[#0b0d14] border border-white/10 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Radio className="w-3.5 h-3.5 text-yellow-400 animate-pulse" />
             <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider font-mono">
-              Bitget Live Ticker Feed (USDT Spot & Tokenized 7x24 rTokens)
+              Live Ticker Feed (USDT Spot & Tokenized RWA Vaults)
             </span>
           </div>
           <span className="text-[10px] text-gray-500 font-mono">

@@ -130,7 +130,7 @@ export const CanonicalSequenceExplainerModal: React.FC<Props> = ({
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="text-yellow-400 font-bold">&bull;</span>
-                  <span>Awarded <strong>strictly after</strong> passing price corridor sanity bounds, Bitget L2 slippage collars, and cryptographic state hashing.</span>
+                  <span>Awarded <strong>strictly after</strong> passing price corridor sanity bounds, 0.5% L2 slippage collars, and cryptographic state hashing.</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="text-yellow-400 font-bold">&bull;</span>

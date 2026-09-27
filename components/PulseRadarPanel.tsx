@@ -33,7 +33,7 @@ const INITIAL_PULSE_DATA: PulseAsset[] = [
     sentimentLabel: 'EXTREME BULL',
     velocity1h: 312,
     mentionsPerHour: 4820,
-    catalystSummary: 'Bitget on-chain liquidity telemetry detects institutional accumulation across spot pairs.',
+    catalystSummary: 'On-chain liquidity telemetry detects institutional accumulation across spot pairs.',
     sources: { twitter: 91, farcaster: 84, reddit: 76, discord: 89 },
   },
   {
@@ -44,7 +44,7 @@ const INITIAL_PULSE_DATA: PulseAsset[] = [
     sentimentLabel: 'BULLISH',
     velocity1h: 185,
     mentionsPerHour: 3940,
-    catalystSummary: 'Bitget tokenized equity 7x24 volume surge as datacenter AI accelerator reports cross wire.',
+    catalystSummary: 'Tokenized equity 7x24 volume surge as datacenter AI accelerator reports cross wire.',
     sources: { twitter: 84, reddit: 80, discord: 78 },
   },
   {
@@ -55,7 +55,7 @@ const INITIAL_PULSE_DATA: PulseAsset[] = [
     sentimentLabel: 'BULLISH',
     velocity1h: 94,
     mentionsPerHour: 12450,
-    catalystSummary: 'Global ETF net inflows hit positive streak; Bitget futures funding rates stabilize in positive territory.',
+    catalystSummary: 'Global ETF net inflows hit positive streak; futures funding rates stabilize in positive territory.',
     sources: { twitter: 78, farcaster: 72, reddit: 69, discord: 75 },
   },
   {
@@ -66,7 +66,7 @@ const INITIAL_PULSE_DATA: PulseAsset[] = [
     sentimentLabel: 'BULLISH',
     velocity1h: 142,
     mentionsPerHour: 3120,
-    catalystSummary: 'Bitget 7x24 tokenized stock breakout after robotaxi regulatory trial filings.',
+    catalystSummary: '24/7 tokenized stock breakout after robotaxi regulatory trial filings.',
     sources: { twitter: 72, reddit: 65, discord: 68 },
   },
   {
@@ -251,7 +251,7 @@ export function PulseRadarPanel({ onSelectTickerForCouncil }: PulseRadarPanelPro
             onClick={fetchLivePulse}
             disabled={isRefreshing}
             className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-all cursor-pointer"
-            title="Poll live CoinGecko & Bitget social momentum"
+            title="Poll live market & social momentum"
           >
             <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-cyan-400' : 'text-gray-400'}`} />
             <span className="hidden sm:inline">{isRefreshing ? 'Syncing...' : 'Sync Feeds'}</span>
