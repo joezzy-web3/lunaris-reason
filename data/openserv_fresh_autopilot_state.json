@@ -1,0 +1,11 @@
+{
+  "isExecuting": true,
+  "isTurbo": false,
+  "cashBalance": 100000.0,
+  "positions": {},
+  "ledger": [],
+  "autoExitPct": 3,
+  "maxOpenPositions": 3,
+  "cycleCount": 0,
+  "lastUpdated": "2026-09-27T21:46:00.000Z"
+}
