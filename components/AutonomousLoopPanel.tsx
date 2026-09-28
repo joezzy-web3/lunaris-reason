@@ -4,7 +4,7 @@ import { fetchPriceSnapshot, PriceSnapshot, ASSET_REGISTRY } from '@/lib/liveTok
 import { getSeededPrice, SEEDED_ASSETS } from '@/lib/demoSeedData';
 import { evaluateTradeRisk, TradeProposal } from '@/lib/riskVeto';
 import { recordNewPaperTrade } from '@/lib/paperTradingAudit';
-import { Play, Square, Zap, ShieldAlert, RotateCcw, ArrowUpRight, ArrowDownRight, RefreshCw, Target, ShieldCheck, Lock, Sliders, BookOpen, Activity, Send, CheckCircle2 } from 'lucide-react';
+import { Play, Square, Zap, ShieldAlert, RotateCcw, ArrowUpRight, ArrowDownRight, RefreshCw, Target, ShieldCheck, Lock, Sliders, BookOpen, Activity, Send, CheckCircle2, Clock } from 'lucide-react';
 import { playTradeApprovedChime, playRiskVetoTone, playCyberClick } from '@/lib/soundSynth';
 import { AutopilotResetPasscodeModal } from '@/components/AutopilotResetPasscodeModal';
 import { AutopilotLedgerView, AutopilotLedgerEntry } from '@/components/AutopilotLedgerView';
@@ -56,6 +56,22 @@ export interface Position {
   trailingStopPct?: number;
   lockedFloorPrice?: number;
   isBreakevenLocked?: boolean;
+}
+
+export interface QueuedMatrixTrade {
+  id: string;
+  proposal: TradeProposal;
+  timestamp: number;
+  status: 'QUEUED';
+}
+
+export interface MatrixNotification {
+  ticker: string;
+  action: string;
+  status: 'EXECUTED' | 'SLOTS_FULL_EXPAND_PROMPT' | 'QUEUED_PRIORITY';
+  message: string;
+  proposal: TradeProposal;
+  timestamp: number;
 }
 
 interface AutonomousLoopPanelProps {
@@ -158,12 +174,132 @@ export function AutonomousLoopPanel({
     }
   };
 
+  const [highlightedTicker, setHighlightedTicker] = useState<string | null>(null);
+  const [matrixNotification, setMatrixNotification] = useState<MatrixNotification | null>(null);
+  const [priorityQueue, setPriorityQueue] = useState<QueuedMatrixTrade[]>([]);
+
+  // Handle incoming proposal from Cross-Asset Matrix or Council with slot capacity & priority queuing
   useEffect(() => {
-    if (externalProposal) {
-      handleIncomingCouncilSignal(externalProposal);
+    if (externalProposal && externalProposal.asset) {
+      const ticker = externalProposal.asset.toUpperCase();
+      const currentPositionsCount = Object.values(positions).filter(
+        (p: any) => p && Number(p.amount) > 0 && Number(p.currentPrice) > 0
+      ).length;
+
+      setHighlightedTicker(ticker);
+
+      if (currentPositionsCount < maxOpenPositions) {
+        // Space available -> Execute immediately!
+        handleIncomingCouncilSignal(externalProposal);
+        setMatrixNotification({
+          ticker,
+          action: externalProposal.action,
+          status: 'EXECUTED',
+          message: `Executed immediately into active portfolio slot ${currentPositionsCount + 1}/${maxOpenPositions}.`,
+          proposal: externalProposal,
+          timestamp: Date.now(),
+        });
+        playTradeApprovedChime();
+      } else if (maxOpenPositions < 5) {
+        // 3/3 Slots filled -> Prompt user to expand to 5/5 slots or queue!
+        playRiskVetoTone();
+        const queuedItem: QueuedMatrixTrade = {
+          id: `queue-${Date.now()}-${ticker}`,
+          proposal: externalProposal,
+          timestamp: Date.now(),
+          status: 'QUEUED',
+        };
+        setPriorityQueue((prev) => {
+          if (prev.some((q) => q.proposal.asset === ticker)) return prev;
+          return [...prev, queuedItem];
+        });
+        setMatrixNotification({
+          ticker,
+          action: externalProposal.action,
+          status: 'SLOTS_FULL_EXPAND_PROMPT',
+          message: `All ${maxOpenPositions}/${maxOpenPositions} slots are filled. Expand capacity to 5/5 to execute immediately, or leave queued.`,
+          proposal: externalProposal,
+          timestamp: Date.now(),
+        });
+      } else {
+        // 5/5 Slots filled -> Add to high-priority queue!
+        playRiskVetoTone();
+        const queuedItem: QueuedMatrixTrade = {
+          id: `queue-${Date.now()}-${ticker}`,
+          proposal: externalProposal,
+          timestamp: Date.now(),
+          status: 'QUEUED',
+        };
+        setPriorityQueue((prev) => {
+          if (prev.some((q) => q.proposal.asset === ticker)) return prev;
+          return [...prev, queuedItem];
+        });
+        setMatrixNotification({
+          ticker,
+          action: externalProposal.action,
+          status: 'QUEUED_PRIORITY',
+          message: `All 5/5 slots filled. Queued with HIGH PRIORITY — will execute automatically as soon as an open position hits Take-Profit or Stop-Loss.`,
+          proposal: externalProposal,
+          timestamp: Date.now(),
+        });
+      }
+
       onClearExternalProposal?.();
     }
-  }, [externalProposal, handleIncomingCouncilSignal, onClearExternalProposal]);
+  }, [externalProposal, maxOpenPositions, positions, handleIncomingCouncilSignal, onClearExternalProposal]);
+
+  // Clear highlight glow after 6 seconds
+  useEffect(() => {
+    if (highlightedTicker) {
+      const timer = setTimeout(() => {
+        setHighlightedTicker(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedTicker]);
+
+  // Auto-execute from priority queue when an active slot opens up
+  useEffect(() => {
+    const currentPositionsCount = Object.values(positions).filter(
+      (p: any) => p && Number(p.amount) > 0 && Number(p.currentPrice) > 0
+    ).length;
+
+    if (currentPositionsCount < maxOpenPositions && priorityQueue.length > 0) {
+      const [nextTrade, ...remainingQueue] = priorityQueue;
+      setPriorityQueue(remainingQueue);
+      handleIncomingCouncilSignal(nextTrade.proposal);
+      const sym = nextTrade.proposal.asset.toUpperCase();
+      setHighlightedTicker(sym);
+      setMatrixNotification({
+        ticker: sym,
+        action: nextTrade.proposal.action,
+        status: 'EXECUTED',
+        message: `Slot opened! Priority queued trade for ${sym} automatically executed into slot ${currentPositionsCount + 1}/${maxOpenPositions}.`,
+        proposal: nextTrade.proposal,
+        timestamp: Date.now(),
+      });
+      playTradeApprovedChime();
+    }
+  }, [positions, maxOpenPositions, priorityQueue, handleIncomingCouncilSignal]);
+
+  const handleExpandTo5SlotsAndExecute = () => {
+    playCyberClick();
+    setMaxOpenPositions(5);
+    if (matrixNotification?.proposal) {
+      handleIncomingCouncilSignal(matrixNotification.proposal);
+      setPriorityQueue((prev) => prev.filter((q) => q.proposal.asset !== matrixNotification.ticker));
+      setMatrixNotification((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'EXECUTED',
+              message: `Expanded portfolio capacity to 5/5 slots! Executed ${prev.ticker} immediately.`,
+            }
+          : null
+      );
+      playTradeApprovedChime();
+    }
+  };
 
   const handleResetPortfolio = () => {
     setIsResetPasscodeModalOpen(true);
@@ -210,13 +346,77 @@ export function AutonomousLoopPanel({
   const unrealizedPnlPct = totalPositionCost > 0 ? (safeUnrealizedPnl / totalPositionCost) * 100 : 0;
 
   return (
-    <div className="bg-[var(--lunaris-panel-bg)] border border-[var(--lunaris-panel-border)] rounded-lg p-4 font-mono shadow-xl relative overflow-hidden">
+    <div
+      id="autonomous-loop-panel"
+      className="bg-[var(--lunaris-panel-bg)] border border-[var(--lunaris-panel-border)] rounded-lg p-4 font-mono shadow-xl relative overflow-hidden scroll-mt-24"
+    >
       {/* Circuit Breaker HUD Toast */}
       {circuitBreakerAlert && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-amber-500/20 border border-amber-500 text-amber-300 text-xs px-3 py-1.5 rounded-md flex items-center gap-2 shadow-lg backdrop-blur-md animate-bounce">
           <ShieldAlert className="w-4 h-4 text-amber-400" />
           <span className="font-bold">RISK-VETO TRIGGERED:</span>
           <span>{circuitBreakerAlert}</span>
+        </div>
+      )}
+
+      {/* Cross-Asset Matrix Signal Flash Banner */}
+      {matrixNotification && (
+        <div
+          className={`mb-4 p-3.5 rounded-xl border text-xs font-mono shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 transition-all ${
+            matrixNotification.status === 'EXECUTED'
+              ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 shadow-[0_0_30px_rgba(16,185,129,0.35)]'
+              : matrixNotification.status === 'SLOTS_FULL_EXPAND_PROMPT'
+              ? 'bg-amber-950/70 border-amber-500/70 text-amber-200 shadow-[0_0_30px_rgba(245,158,11,0.4)]'
+              : 'bg-purple-950/70 border-purple-500/70 text-purple-200 shadow-[0_0_30px_rgba(168,85,247,0.4)]'
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              {matrixNotification.status === 'EXECUTED' ? (
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                </div>
+              ) : matrixNotification.status === 'SLOTS_FULL_EXPAND_PROMPT' ? (
+                <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/50 flex items-center justify-center shrink-0 mt-0.5 animate-pulse">
+                  <ShieldAlert className="w-4 h-4 text-amber-400" />
+                </div>
+              ) : (
+                <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/50 flex items-center justify-center shrink-0 mt-0.5 animate-pulse">
+                  <Clock className="w-4 h-4 text-purple-400" />
+                </div>
+              )}
+
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold tracking-wide uppercase text-white text-xs">
+                    {matrixNotification.status === 'EXECUTED'
+                      ? `⚡ MATRIX SIGNAL EXECUTED: ${matrixNotification.action} ${matrixNotification.ticker}`
+                      : matrixNotification.status === 'SLOTS_FULL_EXPAND_PROMPT'
+                      ? `⚠️ ALL ${maxOpenPositions}/${maxOpenPositions} SLOTS FILLED: ${matrixNotification.ticker}`
+                      : `⏳ QUEUED WITH HIGH PRIORITY: ${matrixNotification.ticker}`}
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/10 text-cyan-300 border border-white/10 font-mono">
+                    From Cross-Asset Matrix
+                  </span>
+                </div>
+                <p className="text-[11px] mt-1 text-zinc-300 leading-relaxed font-normal">
+                  {matrixNotification.message}
+                </p>
+              </div>
+            </div>
+
+            {matrixNotification.status === 'SLOTS_FULL_EXPAND_PROMPT' && (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleExpandTo5SlotsAndExecute}
+                  className="px-4 py-2 rounded-lg bg-[#00F0FF] hover:bg-[#3bf4ff] text-black font-extrabold text-xs font-mono transition-all shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center gap-1.5 cursor-pointer hover:scale-102"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-black" />
+                  <span>⚡ Expand to 5/5 Slots & Execute</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -752,10 +952,15 @@ export function AutonomousLoopPanel({
                 const safePnlPct = Number(pos.unrealizedPnlPct) || 0;
                 const totalPosVal = safeAmt * safePrice;
 
+                const isHighlighted = pos.ticker.toUpperCase() === highlightedTicker;
                 return (
                   <div
                     key={pos.ticker}
-                    className="flex items-center justify-between bg-black/40 p-2 rounded border border-white/5 hover:border-white/15 transition-colors text-xs"
+                    className={`flex items-center justify-between p-2 rounded transition-all duration-500 text-xs ${
+                      isHighlighted
+                        ? 'bg-cyan-950/80 border-2 border-[#00F0FF] shadow-[0_0_25px_rgba(0,240,255,0.7)] ring-2 ring-[#00F0FF]/40'
+                        : 'bg-black/40 border border-white/5 hover:border-white/15'
+                    }`}
                   >
                     <div className="flex items-center gap-2">
                       <span
@@ -768,8 +973,13 @@ export function AutonomousLoopPanel({
                         {pos.class}
                       </span>
                       <div>
-                        <div className="font-bold text-white flex items-center gap-1.5">
+                        <div className="font-bold text-white flex items-center gap-1.5 flex-wrap">
                           {pos.ticker}
+                          {isHighlighted && (
+                            <span className="text-[9px] bg-[#00F0FF] text-black font-extrabold px-1.5 py-0.5 rounded shadow-[0_0_10px_rgba(0,240,255,0.6)] flex items-center gap-1 animate-pulse">
+                              <Zap className="w-2.5 h-2.5 fill-black" /> MATRIX SIGNAL
+                            </span>
+                          )}
                           <span className="text-[10px] font-normal text-gray-400">
                             ({safeAmt.toFixed(pos.class === 'CX' ? 3 : 1)} units)
                           </span>
@@ -845,6 +1055,49 @@ export function AutonomousLoopPanel({
               })
             )}
           </div>
+
+          {/* High-Priority Queue Card (Matrix & Council Signals) */}
+          {priorityQueue.length > 0 && (
+            <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/40 text-xs font-mono space-y-2 shadow-lg animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-purple-300 font-bold">
+                  <Clock className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+                  <span>HIGH-PRIORITY EXECUTION QUEUE ({priorityQueue.length})</span>
+                </div>
+                <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Next In Line
+                </span>
+              </div>
+              <p className="text-[10px] text-zinc-400">
+                {maxOpenPositions < 5
+                  ? `All ${maxOpenPositions}/${maxOpenPositions} slots occupied. Orders auto-execute the moment a slot opens on Take-Profit, or expand to 5/5 slots above to run now.`
+                  : 'All 5/5 slots occupied. Queued orders auto-execute the instant an open position hits Take-Profit or Stop-Loss.'}
+              </p>
+              <div className="space-y-1.5">
+                {priorityQueue.map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className="flex items-center justify-between bg-black/60 p-2 rounded-lg border border-purple-500/30 text-[11px]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500 text-[10px] font-mono">#{idx + 1}</span>
+                      <span className="font-extrabold text-white">{q.proposal.asset}</span>
+                      <span className="text-purple-300 text-[10px] bg-purple-500/20 border border-purple-500/30 px-1.5 py-0.2 rounded font-bold">
+                        {q.proposal.action}
+                      </span>
+                      <span className="text-zinc-400 text-[10px]">
+                        Cross-Asset Matrix
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-purple-300 font-mono font-bold flex items-center gap-1">
+                      <Zap className="w-2.5 h-2.5 text-purple-400 fill-purple-400" />
+                      PRIORITY
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Market Feed Radar - Realtime Spot & RWA Equities Feed */}
           <div className="pt-2 border-t border-white/10">

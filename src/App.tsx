@@ -305,6 +305,12 @@ export default function App() {
   const handleSendToAutopilot = (proposal: TradeProposal) => {
     setIncomingProposal(proposal);
     navigateToTab('MATRIX');
+    setTimeout(() => {
+      const panel = document.getElementById('autonomous-loop-panel') || document.getElementById('autonomous-loop-section');
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 120);
   };
 
   // Handoff ticker and catalyst instruction from Pulse Radar to Council & auto-redirect
@@ -630,7 +636,7 @@ export default function App() {
               </div>
 
               {/* Connected Autonomous Loop Panel */}
-              <div className="rounded-3xl bg-[#0E1017] border border-white/[0.08] p-5 sm:p-6">
+              <div id="autonomous-loop-section" className="rounded-3xl bg-[#0E1017] border border-white/[0.08] p-5 sm:p-6 scroll-mt-20">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
                     Autonomous Execution Loop (V2 Sandbox)

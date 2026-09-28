@@ -163,6 +163,14 @@ export function CrossAssetMatrix({ onRoutePairSignal }: CrossAssetMatrixProps) {
       };
       onRoutePairSignal(proposal);
     }
+
+    // Auto-scroll down smoothly to the Autonomous Loop panel so user sees their execution/queue
+    setTimeout(() => {
+      const panel = document.getElementById('autonomous-loop-panel') || document.getElementById('autonomous-loop-section');
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   return (
