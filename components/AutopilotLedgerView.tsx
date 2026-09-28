@@ -72,6 +72,10 @@ export function AutopilotLedgerView({
       if (!matchesSearch) return false;
 
       if (typeFilter === 'ALL') return true;
+      if (typeFilter === 'RWA') {
+        const u = entry.ticker.toUpperCase();
+        return u.includes('UST') || u.includes('TBILL') || u.includes('REIT') || u.includes('PAXG') || u.includes('WTI') || u.includes('ONDO');
+      }
       if (typeFilter === 'PROFIT' && (entry.type === 'TAKE_PROFIT' || entry.type === 'AUTO_EXIT' || entry.realizedPnl > 0)) return true;
       if (typeFilter === 'CASHOUT' && entry.type === 'CASHOUT_ALL') return true;
       if (typeFilter === 'MANUAL' && entry.type === 'MANUAL_INTERVENTION') return true;
@@ -291,6 +295,11 @@ export function AutopilotLedgerView({
             <option value="BTC">BTC (Spot Crypto)</option>
             <option value="ETH">ETH (Spot Crypto)</option>
             <option value="SOL">SOL (Spot Crypto)</option>
+            <option value="UST10Y">UST10Y (10-Yr Treasury RWA Vault)</option>
+            <option value="TBILL">TBILL (3-Month T-Bill Vault)</option>
+            <option value="PAXG">PAXG (Tokenized Physical Gold)</option>
+            <option value="REIT">REIT (Commercial Real Estate Yield)</option>
+            <option value="WTI">WTI (Crude Oil Index RWA)</option>
             <option value="NVDA">NVDA (Equity)</option>
             <option value="TSLA">TSLA (Equity)</option>
             <option value="PLTR">PLTR (Palantir Tech)</option>
@@ -347,7 +356,7 @@ export function AutopilotLedgerView({
       {/* Filter & Search Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-1.5 flex-wrap">
-          {['ALL', 'PROFIT', 'CASHOUT', 'MANUAL', 'CUT', 'RESET'].map((f) => (
+          {['ALL', 'RWA', 'PROFIT', 'CASHOUT', 'MANUAL', 'CUT', 'RESET'].map((f) => (
             <button
               key={f}
               onClick={() => {

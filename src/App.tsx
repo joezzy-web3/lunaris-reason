@@ -1,7 +1,7 @@
 /**
- * LUNARIS Terminal (Bitget Edition) — Phase 2 Cybernetic Expansion
- * Inspired by Moonberg & Institutional AI Trading Cockpits
- * Built for Bitget AI Hackathon by Joezzy (Joezzy Web3)
+ * LUNARIS REASON // OpenServ Autonomous RWA Terminal
+ * Institutional Multi-Agent Bounded Reasoning Cockpit
+ * Built for OpenServ AI Agent Hackathon by Joezzy (Joezzy Web3)
  */
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -55,6 +55,12 @@ const CommandPaletteModal = React.lazy(() =>
 const ProofCertificatesView = React.lazy(() =>
   import('@/components/ProofCertificatesView').then((m) => ({ default: m.ProofCertificatesView }))
 );
+const OpenServMcpModal = React.lazy(() =>
+  import('@/components/OpenServMcpModal').then((m) => ({ default: m.OpenServMcpModal }))
+);
+const OpenServManifestModal = React.lazy(() =>
+  import('@/components/OpenServManifestModal').then((m) => ({ default: m.OpenServManifestModal }))
+);
 import { PulseContext } from '@/lib/councilDebateEngine';
 import {
   toggleTerminalSound,
@@ -96,6 +102,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   FileCheck2,
+  FileCode,
 } from 'lucide-react';
 
 export type TerminalTab = 'DECK' | 'COUNCIL' | 'MATRIX' | 'AUDIT' | 'CERTIFICATES';
@@ -177,9 +184,11 @@ export default function App() {
   const [utcTime, setUtcTime] = useState<string>('');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
+  const [isMcpModalOpen, setIsMcpModalOpen] = useState<boolean>(false);
+  const [isOpenServManifestOpen, setIsOpenServManifestOpen] = useState<boolean>(false);
   const [isBlackSwanDrillOpen, setIsBlackSwanDrillOpen] = useState<boolean>(false);
   const [tradingFloorAudio, setTradingFloorAudio] = useState<boolean>(false);
-  const [isBitgetConnected, setIsBitgetConnected] = useState<boolean>(() => {
+  const [isApiKeyConnected, setIsApiKeyConnected] = useState<boolean>(() => {
     try {
       return !!localStorage.getItem('LUNARIS_BITGET_BYOK_CREDENTIALS_V1');
     } catch {
@@ -340,7 +349,7 @@ export default function App() {
     { id: 'STATARB', name: 'StatArb Matrix', icon: ArrowRightLeft, desc: 'Cross-Asset Pairs' },
     { id: 'PULSE', name: 'Pulse Radar', icon: Radio, desc: 'Sentiment & Whales' },
     { id: 'DEPTH', name: 'Liquidity Depth', icon: Layers, desc: 'Order Book Heatmap' },
-    { id: 'AUDIT', name: 'Audit Ledger', icon: ScrollText, desc: 'Bitget S2 Paper Logs' },
+    { id: 'AUDIT', name: 'Audit Ledger', icon: ScrollText, desc: 'Institutional Logs' },
     { id: 'KILLSWITCH', name: 'Kill Switch', icon: Shield, desc: 'Circuit Telemetry' },
   ] as const;
 
@@ -462,17 +471,30 @@ export default function App() {
 
           {/* Right: Quick Action Controls & Prominent "Get Demo" Style Pill */}
           <div className="flex items-center gap-2 text-xs">
-            {/* Cmd + K Command Pill */}
+            {/* OpenServ Discovery Manifest Pill (Standardized /.well-known/openserv-agent.json) */}
             <button
               onClick={() => {
                 playCyberClick();
-                setIsCommandPaletteOpen(true);
+                setIsOpenServManifestOpen(true);
               }}
-              title="Open Command Palette (Cmd + K)"
-              className="flex items-center gap-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.1] px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer"
+              title="OpenServ Agent Discovery Manifest (/.well-known/openserv-agent.json)"
+              className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-white border border-emerald-500/30 px-2.5 py-1.5 rounded-full text-xs transition-colors cursor-pointer font-mono"
             >
-              <Command className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline font-mono font-semibold">⌘K</span>
+              <FileCode className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline font-bold text-[11px]">SERV Manifest</span>
+            </button>
+
+            {/* OpenServ MCP Tools Trigger */}
+            <button
+              onClick={() => {
+                playCyberClick();
+                setIsMcpModalOpen(true);
+              }}
+              title="OpenServ Model Context Protocol (MCP) Live Explorer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-all border border-cyan-500/30 bg-cyan-950/40 text-cyan-300 hover:bg-cyan-500/20 hover:text-white cursor-pointer shadow-sm"
+            >
+              <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="font-mono font-bold text-[11px]">OpenServ MCP</span>
             </button>
 
             {/* BYOK Key Trigger */}
@@ -483,13 +505,13 @@ export default function App() {
               }}
               title="Pair API Key"
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs transition-colors border cursor-pointer ${
-                isBitgetConnected
+                isApiKeyConnected
                   ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
                   : 'bg-white/[0.04] border-white/[0.1] text-zinc-400 hover:text-white'
               }`}
             >
               <Key className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden lg:inline">{isBitgetConnected ? 'Paired' : 'BYOK'}</span>
+              <span className="hidden lg:inline">{isApiKeyConnected ? 'Paired' : 'Agent Key'}</span>
             </button>
 
             {/* Audio Toggle */}
@@ -668,19 +690,19 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-[11px] font-mono">
-            <span>Authoritative Protocol: <b className="text-zinc-200">Track 2 Multi-Agent Reason</b></span>
+            <span>Core Protocol: <b className="text-zinc-200">OpenServ BRAID Bounded Reasoning</b></span>
             <span className="text-zinc-600">•</span>
             <span className="text-cyan-400">0.5% Slippage Collar Active</span>
             <span className="text-zinc-600">•</span>
             <span className="text-emerald-400">Isolated V2 Ledger</span>
             <span className="text-zinc-600">•</span>
             <a
-              href="https://bitget-ai.gitbook.io/bitgetai_hackathons2"
+              href="https://openserv.ai"
               target="_blank"
               rel="noopener noreferrer"
               className="text-cyan-400 hover:underline flex items-center gap-1 font-medium"
             >
-              Handbook <ExternalLink className="w-3 h-3" />
+              OpenServ Protocol <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         </div>
@@ -719,13 +741,26 @@ export default function App() {
           }}
         />
 
-        {/* Bitget Institutional Read-Only API (BYOK) Modal */}
+        {/* Institutional Read-Only API Key (BYOK) Modal */}
         <BitgetApiKeyModal
           isOpen={isApiKeyModalOpen}
           onClose={() => setIsApiKeyModalOpen(false)}
           onConnectionStatusChange={(connected) => {
-            setIsBitgetConnected(connected);
+            setIsApiKeyConnected(connected);
           }}
+        />
+
+        {/* OpenServ MCP Interactive Explorer Modal */}
+        <OpenServMcpModal
+          isOpen={isMcpModalOpen}
+          onClose={() => setIsMcpModalOpen(false)}
+        />
+
+        {/* OpenServ Agent Discovery Manifest Modal (Standardized /.well-known/openserv-agent.json) */}
+        <OpenServManifestModal
+          isOpen={isOpenServManifestOpen}
+          onClose={() => setIsOpenServManifestOpen(false)}
+          onOpenMcpTools={() => setIsMcpModalOpen(true)}
         />
 
         {/* Black Swan / Flash Crash Emergency Drill Modal */}

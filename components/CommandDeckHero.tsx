@@ -287,7 +287,7 @@ export function CommandDeckHero({
                   </div>
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
-                      Good session, <span className="bg-gradient-to-r from-[#38bdf8] via-[#a855f7] to-[#f472b6] bg-clip-text text-transparent">Alex.</span>
+                      Good session, <span className="bg-gradient-to-r from-[#38bdf8] via-[#a855f7] to-[#f472b6] bg-clip-text text-transparent">Anon.</span>
                     </h2>
                     <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-normal leading-relaxed">
                       How can the council assist your portfolio execution today?

@@ -768,12 +768,12 @@ export function generateCsvExport(trades: PaperTradeRecord[]): string {
 
   const metadataComments = [
     '# ==========================================================================================',
-    '# BITGET AI BASE CAMP HACKATHON (SEASON 2) — OFFICIAL PAPER-TRADING AUDIT LEDGER',
-    '# Track: Track 2 - Agentic Trading (Autonomous Council Quorum Execution)',
+    '# LUNARIS REASON — OFFICIAL PAPER-TRADING AUDIT LEDGER',
+    '# Core Domain: Autonomous RWA Yield & Multi-Agent Bounded Reasoning',
     '# Starting Capital: $100,000.00 USD',
     `# Current Settled Balance: $${currentBalance.toFixed(2)} USD (Net PnL: ${netPnl >= 0 ? '+' : ''}$${netPnl.toFixed(2)} / ${netPnlPct >= 0 ? '+' : ''}${netPnlPct.toFixed(2)}%)`,
     `# Total Executed Paper Trades: ${executedTradesCount}`,
-    '# Execution Model: Bitget VIP-0 Taker Fee (0.06% Crypto, 0.10% rTokens) + Dynamic L2 Orderbook Slippage',
+    '# Execution Model: Institutional VIP-0 Taker Fee (0.06% Crypto, 0.10% rTokens) + Dynamic L2 Orderbook Slippage',
     '# ------------------------------------------------------------------------------------------',
     '# AUDIT DISCLOSURE NOTE: OFFICIAL AUDITOR REFERENCE & MATHEMATICAL INVARIANTS',
     '# ------------------------------------------------------------------------------------------',

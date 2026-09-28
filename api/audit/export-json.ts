@@ -11,7 +11,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Content-Disposition', 'attachment; filename="lunaris_bitget_s2_trade_audit.json"');
+  res.setHeader('Content-Disposition', 'attachment; filename="lunaris_rwa_trade_audit.json"');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -30,12 +30,12 @@ export default async function handler(req: any, res: any) {
   const metrics = computeMetrics(state.totalTrades, state.currentBalance, state.latestTrade);
 
   const payload = {
-    hackathon: 'Bitget AI Base Camp Hackathon S2',
-    track: 'Track 2 - Agentic Trading (Agent Trading)',
+    platform: 'OpenServ AgentKit Protocol',
+    domain: 'Autonomous RWA Yield & Multi-Agent Bounded Reasoning',
     databaseEngine: 'Cloudflare D1 Distributed Edge SQL',
     startingCapitalUsd: 100000.0,
     currency: 'USD',
-    baselineSpecification: 'Bitget S2 $100,000.00 USD Genesis Capital Pool',
+    baselineSpecification: '$100,000.00 USD Institutional Genesis Capital Pool',
     totalRecords: state.totalTrades,
     settledBalance: state.currentBalance,
     exportTimestamp: new Date().toISOString(),

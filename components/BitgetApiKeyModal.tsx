@@ -119,8 +119,8 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
       if (!res.ok || !data.success) {
         setIsTesting(false);
         const errText = data.bitgetCode
-          ? `Bitget API [${data.bitgetCode}]: ${data.error}`
-          : data.error || 'Bitget verification failed. Check credentials.';
+          ? `API Gateway [${data.bitgetCode}]: ${data.error}`
+          : data.error || 'Verification failed. Check credentials.';
         setErrorMessage(errText);
         playRiskVetoTone();
         return;
@@ -137,8 +137,8 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
         apiSecret: apiSecret.trim(),
         passphrase: passphrase.trim(),
         isSandbox: Boolean(data.isSandbox),
-        mode: data.mode || 'Bitget V2 API',
-        userId: data.userId || 'bitget_user',
+        mode: data.mode || 'Institutional Gateway',
+        userId: data.userId || 'operator_user',
         accountType: data.accountType || 'Spot / Unified Margin',
         authorities: data.authorities || ['read_only'],
         assets: data.assets || [],
@@ -160,7 +160,7 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
       }, 3500);
     } catch (err: any) {
       setIsTesting(false);
-      setErrorMessage(err.message || 'Network error verifying Bitget API credentials.');
+      setErrorMessage(err.message || 'Network error verifying credentials.');
       playRiskVetoTone();
     }
   };
@@ -181,7 +181,7 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
   };
 
   return (
-    <div id="bitget-byok-modal" className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn font-mono">
+    <div id="institutional-byok-modal" className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn font-mono">
       <div className="bg-[#0b0d14] border border-[#00F0FF]/30 rounded-2xl max-w-lg w-full p-6 shadow-[0_0_45px_rgba(0,240,255,0.15)] relative flex flex-col space-y-4 max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
@@ -192,11 +192,11 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
                 BYOK // Read-Only API Pairing
               </span>
               <span className="text-[10px] bg-white/10 text-zinc-300 px-2 py-0.5 rounded">
-                Bitget V2 Open API
+                Institutional Gateway
               </span>
             </div>
             <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
-              {isConnected ? 'Bitget Account Paired (Read-Only)' : 'Pair Read-Only Bitget API Key'}
+              {isConnected ? 'Institutional Account Paired (Read-Only)' : 'Pair Institutional Custody API Key'}
             </h2>
           </div>
 
@@ -217,9 +217,9 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
           <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
           <div className="space-y-1 text-zinc-300 text-[11px] font-sans leading-relaxed">
             <span className="font-bold text-white font-mono uppercase text-[10px]">
-              V2 HMAC Security &amp; Read-Only Isolation:
+              Cryptographic HMAC Security &amp; Read-Only Isolation:
             </span>{' '}
-            Credentials are authenticated via official Bitget V2 HMAC-SHA256 headers. Lunaris strictly requests read-only telemetry to verify margin assets and orderbook liquidity without withdrawal or execution rights.
+            Credentials are authenticated via HMAC-SHA256 headers. LUNARIS strictly requests read-only telemetry to verify margin assets and orderbook liquidity without withdrawal or execution rights.
           </div>
         </div>
 
@@ -276,12 +276,12 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
           {/* API Key */}
           <div className="space-y-1">
             <label className="text-[11px] text-zinc-400 font-bold uppercase flex items-center justify-between">
-              <span>Bitget API Key (Read-Only)</span>
+              <span>Custody API Key (Read-Only)</span>
               <span className="text-[10px] text-zinc-500 font-normal">Required</span>
             </label>
             <input
               type="text"
-              placeholder="e.g. bg_live_9a7d8c6b5e4f... or sandbox key"
+              placeholder="e.g. key_live_9a7d8c6b5e4f... or sandbox key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               className="w-full bg-[#121520] border border-white/15 focus:border-[#00F0FF] rounded-xl px-3.5 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#00F0FF]"
@@ -297,7 +297,7 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
             <div className="relative">
               <input
                 type={showSecret ? 'text' : 'password'}
-                placeholder="Bitget HMAC-SHA256 Secret"
+                placeholder="HMAC-SHA256 Secret"
                 value={apiSecret}
                 onChange={(e) => setApiSecret(e.target.value)}
                 className="w-full bg-[#121520] border border-white/15 focus:border-[#00F0FF] rounded-xl pl-3.5 pr-10 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#00F0FF]"
@@ -316,7 +316,7 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
           {/* Passphrase */}
           <div className="space-y-1">
             <label className="text-[11px] text-zinc-400 font-bold uppercase flex items-center justify-between">
-              <span>Bitget Passphrase</span>
+              <span>Key Passphrase</span>
               <span className="text-[10px] text-zinc-500 font-normal">ACCESS-PASSPHRASE</span>
             </label>
             <input
@@ -344,7 +344,7 @@ export const BitgetApiKeyModal: React.FC<BitgetApiKeyModalProps> = ({
         {connectionSuccess && (
           <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-xl p-3 text-xs text-emerald-400 flex items-center gap-2 animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>Bitget credentials successfully authenticated via HMAC-SHA256 signature!</span>
+            <span>Credentials successfully authenticated via HMAC-SHA256 signature!</span>
           </div>
         )}
 

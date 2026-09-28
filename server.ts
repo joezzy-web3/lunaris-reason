@@ -88,6 +88,88 @@ app.get('/api/health', (req, res) => {
 // OPENSERV MODEL CONTEXT PROTOCOL (MCP) SUITE & SERV REASONING API
 // ==========================================
 
+// GET /.well-known/openserv-agent.json & /api/openserv/manifest - Standardized Agent Discovery Endpoint
+const getOpenServAgentManifest = () => ({
+  schemaVersion: 'openserv-agent-v1',
+  agent: {
+    id: 'lunaris-reason',
+    name: 'LUNARIS REASON',
+    version: '2.4.0',
+    description: 'Autonomous Institutional Real-World Asset (RWA) Allocator & Multi-Agent Bounded Reasoning Node with Deterministic 0.5% Slippage Collars and Protocol Escrow Micro-Tolls.',
+    framework: 'OpenServ AgentKit + BRAID',
+    author: 'Joezzy (@JoezzyWeb3)',
+    repository: 'https://github.com/joezzy/lunaris-terminal',
+    license: 'MIT',
+  },
+  supportedTracks: [
+    'Track 3: RWA Vaults (Primary Focus - IXS Finance Alignment)',
+    'Track 1: Mainnet & Model Context Protocol (MCP Tool Provider)',
+    'Track 2: AgentKit & Protocol Escrow (10% Micro-Toll Monetization)',
+    'Track 4: SERV Reasoning (4-Node Bounded DAG & SHA-256 Proofs)',
+  ],
+  economicTerms: {
+    performanceMicroToll: '10%',
+    escrowModel: 'OpenServ Protocol Escrow',
+    escrowEndpoint: '/api/openserv/escrow',
+    currency: 'USDT',
+  },
+  capabilities: {
+    protocol: 'JSON-RPC 2.0 / MCP v1.0',
+    executionEngine: 'Guardian-01 Deterministic Code Gate (Non-LLM)',
+    maxSlippageCollarPct: 0.50,
+    maxLeverage: 5,
+    tools: [
+      {
+        name: 'get_rwa_vault_yields',
+        endpoint: 'POST /api/mcp/execute',
+        description: 'Returns real-time licensed RWA yield vault APYs, custodian NAVs, and secondary market basis spreads.',
+      },
+      {
+        name: 'get_live_market_quotes',
+        endpoint: 'POST /api/mcp/execute',
+        description: 'Returns real-time prices, 24h delta, and liquidity depth for Crypto and Real-World Assets.',
+      },
+      {
+        name: 'enforce_slippage_collar',
+        endpoint: 'POST /api/mcp/execute',
+        description: 'Validates an intended order against the deterministic 0.5% maximum slippage collar constraint.',
+      },
+      {
+        name: 'evaluate_rwa_yield_spread',
+        endpoint: 'POST /api/mcp/execute',
+        description: 'Computes real-time yield arbitrage spread between crypto staking yields vs tokenized sovereign treasuries (UST10Y 5.15% APY).',
+      },
+      {
+        name: 'execute_rwa_rebalance',
+        endpoint: 'POST /api/mcp/execute',
+        description: 'Executes autonomous capital deployment to a licensed RWA vault and routes 10% performance fee to OpenServ Protocol Escrow.',
+      },
+      {
+        name: 'verify_serv_reasoning_proof',
+        endpoint: 'POST /api/mcp/execute',
+        description: 'Cryptographically verifies a trade reason certificate using SHA-256 fingerprinting and 4-agent quorum voting proof.',
+      },
+    ],
+  },
+  health: {
+    status: 'HEALTHY',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  },
+});
+
+app.get('/.well-known/openserv-agent.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json(getOpenServAgentManifest());
+});
+
+app.get('/api/openserv/manifest', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json(getOpenServAgentManifest());
+});
+
 // GET /api/mcp/tools - OpenServ MCP capability catalog
 app.get('/api/mcp/tools', (req, res) => {
   res.json({
@@ -98,6 +180,16 @@ app.get('/api/mcp/tools', (req, res) => {
       description: 'LUNARIS REASON Autonomous Cross-Asset Trading & SERV Bounded Reasoning Gateway',
     },
     tools: [
+      {
+        name: 'get_rwa_vault_yields',
+        description: 'Returns real-time licensed RWA yield vault APYs, custodian NAVs, and secondary market basis spreads.',
+        parameters: {
+          type: 'object',
+          properties: {
+            vaultTicker: { type: 'string', description: 'Optional vault symbol (UST10Y, TBILL, PAXG, REIT)' },
+          },
+        },
+      },
       {
         name: 'get_live_market_quotes',
         description: 'Returns real-time prices, 24h delta, and liquidity depth for Crypto (BTC, ETH, SOL) and Real-World Assets (XAU, WTI, UST10Y, REIT, USDY).',
@@ -135,6 +227,18 @@ app.get('/api/mcp/tools', (req, res) => {
             cryptoYieldToken: { type: 'string', default: 'SOL' },
             rwaTreasuryToken: { type: 'string', default: 'UST10Y' },
           },
+        },
+      },
+      {
+        name: 'execute_rwa_rebalance',
+        description: 'Executes autonomous capital deployment to a licensed RWA vault and routes 10% performance fee to OpenServ Protocol Escrow.',
+        parameters: {
+          type: 'object',
+          properties: {
+            targetVault: { type: 'string' },
+            allocationUsd: { type: 'number' },
+          },
+          required: ['targetVault', 'allocationUsd'],
         },
       },
       {
@@ -823,7 +927,7 @@ app.post('/api/bitget/verify-byok', async (req, res) => {
       return res.json({
         success: true,
         isSandbox: true,
-        mode: 'Bitget S2 Judge Sandbox Gateway',
+        mode: 'OpenServ Judge Sandbox Gateway',
         userId: 'judge_s2_' + cleanKey.slice(-6),
         authorities: ['read_only', 'spot_query', 'margin_query'],
         verifiedAt: new Date().toISOString(),
@@ -833,8 +937,8 @@ app.post('/api/bitget/verify-byok', async (req, res) => {
           { coin: 'ETH', available: '6.2500', frozen: '0.00', usdValue: 15531.25 },
         ],
         totalUsdValue: 181373.35,
-        accountType: 'Unified Cross-Margin (Sandbox VIP-2)',
-        message: 'Judge Sandbox credentials verified. Simulated Bitget V2 account active with $100K paper margin.',
+        accountType: 'Institutional Unified Cross-Margin',
+        message: 'Judge Sandbox credentials verified. Simulated institutional custody account active with $100K paper margin.',
       });
     }
 
@@ -912,19 +1016,19 @@ app.post('/api/bitget/verify-byok', async (req, res) => {
     return res.json({
       success: true,
       isSandbox: false,
-      mode: 'Bitget Live Production V2 Gateway',
-      userId: result.data?.userId || 'bitget_user',
+      mode: 'Institutional Live Production Gateway',
+      userId: result.data?.userId || 'institutional_user',
       authorities: result.data?.authorities || ['read_only'],
       verifiedAt: new Date().toISOString(),
       assets: assetsList,
       totalUsdValue: totalUsd,
-      accountType: 'Bitget Spot Account (Live)',
-      message: 'Bitget V2 Read-Only credentials successfully authenticated against Bitget servers.',
+      accountType: 'Institutional Spot Account (Live)',
+      message: 'Read-Only credentials successfully authenticated via HMAC-SHA256.',
     });
   } catch (err: any) {
     return res.status(500).json({
       success: false,
-      error: err.name === 'AbortError' ? 'Bitget API timeout (6s)' : (err.message || 'Verification error'),
+      error: err.name === 'AbortError' ? 'API timeout (6s)' : (err.message || 'Verification error'),
     });
   }
 });
@@ -2181,15 +2285,17 @@ app.post('/api/audit/reset', (req, res) => {
   });
 });
 
-// POST /api/audit/run-self-audit - Institutional nightly self-audit trigger
-app.post('/api/audit/run-self-audit', (req, res) => {
+// GET & POST /api/audit/run-self-audit - Institutional nightly self-audit trigger & status
+const handleRunSelfAudit = (req: any, res: any) => {
   try {
     const report = runAutomatedSelfAudit();
     res.json(report);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
+app.post('/api/audit/run-self-audit', handleRunSelfAudit);
+app.get('/api/audit/run-self-audit', handleRunSelfAudit);
 
 // POST /api/audit/reload-ledger - Reload authoritative ledger from disk into server cache
 app.post('/api/audit/reload-ledger', (req, res) => {
@@ -3659,11 +3765,11 @@ Return STRICTLY a JSON object with this format:
         sentimentLabel: change24h > 4 ? 'EXTREME BULL' : change24h > 0 ? 'BULLISH' : change24h > -4 ? 'NEUTRAL' : 'BEARISH',
         velocity1h: Math.round(120 + Math.abs(change24h) * 16),
         mentionsPerHour: Math.round(3800 + Math.abs(change24h) * 450),
-        breakingCatalyst: `Real-time orderbook scans confirm 24h volume momentum at $${liveBasePrice.toLocaleString()} (${formattedChange}). Institutional liquidity depth shows ${isBull ? 'bid aggregation' : 'distribution'} across Bitget active books.`,
+        breakingCatalyst: `Real-time orderbook scans confirm 24h volume momentum at $${liveBasePrice.toLocaleString()} (${formattedChange}). Institutional liquidity depth shows ${isBull ? 'bid aggregation' : 'distribution'} across active books.`,
         twitterSentiment: Math.min(94, Math.max(30, Math.round(52 + change24h * 3))),
         redditSentiment: Math.min(90, Math.max(25, Math.round(48 + change24h * 3))),
         farcasterSentiment: Math.min(92, Math.max(30, Math.round(50 + change24h * 3))),
-        searchQueries: [`${symbol} live trading news`, `${symbol} Bitget orderflow`],
+        searchQueries: [`${symbol} live trading news`, `${symbol} institutional orderflow`],
       },
     });
   } catch (err: any) {

@@ -32,9 +32,9 @@ export function HackathonCreditsModal({ isOpen, onClose }: { isOpen: boolean; on
           {/* Track & Developer Card */}
           <div className="p-3.5 rounded-lg bg-black/60 border border-white/10 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-gray-400">Competition Track:</span>
+              <span className="text-gray-400">Core Domain:</span>
               <span className="text-cyan-300 font-bold px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30">
-                Agentic Trading
+                Autonomous RWA Yield &amp; Bounded Reasoning
               </span>
             </div>
             <div className="flex items-center justify-between pt-1 border-t border-white/5">

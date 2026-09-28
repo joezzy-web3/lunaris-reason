@@ -87,7 +87,7 @@ export const UsStockExpansionBanner: React.FC<UsStockExpansionBannerProps> = ({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00F0FF]"></span>
           </span>
-          <span className="text-zinc-300 font-semibold">OpenServ Track 3 Live:</span>
+          <span className="text-zinc-300 font-semibold">OpenServ RWA Engine:</span>
           <span>Tokenized Real-World Asset (RWA) Vaults (UST10Y, TBILL, PAXG, REIT)</span>
         </div>
         <button
@@ -107,7 +107,7 @@ export const UsStockExpansionBanner: React.FC<UsStockExpansionBannerProps> = ({
         <div className="flex items-center gap-2.5">
           <span className="px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 font-bold border border-cyan-400/30 text-[10px] flex items-center gap-1.5 shadow-sm">
             <Landmark className="w-3 h-3 text-cyan-400" />
-            <span>OPENSERV HACKATHON // TRACK 3: RWA VAULTS</span>
+            <span>OPENSERV // AUTONOMOUS RWA VAULTS</span>
           </span>
           <span className="text-zinc-200 hidden sm:inline font-semibold">
             Licensed Yield Vaults & Primary NAV Arbitrage Live

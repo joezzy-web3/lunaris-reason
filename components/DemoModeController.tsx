@@ -60,7 +60,7 @@ export function DemoModeController({
       action: 'BUY',
       size_pct: 12,
       confidence: 0.89,
-      reasoning: 'Standard SMA5/SMA20 cross with Bitget positive funding rate. Fully compliant with bounds.',
+      reasoning: 'Standard SMA5/SMA20 cross with positive funding rate compression. Fully compliant with bounds.',
     };
     onTriggerDirectProposal(proposal);
     setFeedback('Dispatched 12% BTC proposal -> Risk Veto [APPROVED] verified!');

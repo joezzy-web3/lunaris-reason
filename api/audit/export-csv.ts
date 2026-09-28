@@ -9,7 +9,7 @@ export const config = {
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="lunaris_bitget_s2_trade_audit.csv"');
+  res.setHeader('Content-Disposition', 'attachment; filename="lunaris_rwa_trade_audit.csv"');
 
   const trades = AUDIT_TRADES_JSON as any[];
 
