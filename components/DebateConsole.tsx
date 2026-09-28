@@ -69,7 +69,11 @@ interface DebateConsoleProps {
 
 export function normalizeTickerSymbol(sym: string): string {
   const trimmed = (sym || '').trim();
-  const upper = trimmed.toUpperCase();
+  const clean = trimmed
+    .replace(/\/(USDT|USD)$/i, '')
+    .replace(/-(USDT|USD)$/i, '')
+    .trim();
+  const upper = clean.toUpperCase();
   if (upper === 'NVDAON') return 'NVDAon';
   if (upper === 'TSLAON') return 'TSLAon';
   return upper;
@@ -90,22 +94,36 @@ const PRESET_INSTRUCTIONS = [
 ];
 
 const PRESET_ASSETS = [
+  // Crypto Spot
   { ticker: 'BTC', label: 'Bitcoin' },
   { ticker: 'ETH', label: 'Ethereum' },
   { ticker: 'SOL', label: 'Solana' },
-  { ticker: 'NVDAon', label: 'Nvidia 24/7' },
-  { ticker: 'TSLAon', label: 'Tesla 24/7' },
   { ticker: 'SUI', label: 'Sui' },
   { ticker: 'DOGE', label: 'Dogecoin' },
-  { ticker: 'NVDA', label: 'Nvidia' },
+  // Real-World Assets (RWA) & Commodities
+  { ticker: 'XAU', label: 'Gold Spot (RWA)' },
+  { ticker: 'PAXG', label: 'Paxos Gold (RWA)' },
+  { ticker: 'WTI', label: 'Crude Oil (RWA)' },
+  { ticker: 'BRENT', label: 'Brent Oil (RWA)' },
+  { ticker: 'XAG', label: 'Silver Spot (RWA)' },
+  { ticker: 'COPPER', label: 'Copper (RWA)' },
+  { ticker: 'UST10Y', label: '10Y Treasury (RWA)' },
+  { ticker: 'TBILL', label: '3M T-Bill (RWA)' },
+  { ticker: 'REIT', label: 'Real Estate (RWA)' },
+  { ticker: 'URANIUM', label: 'Uranium (RWA)' },
+  { ticker: 'AGRI', label: 'Agriculture (RWA)' },
+  { ticker: 'USDY', label: 'Ondo USDY (RWA)' },
+  // Equities & 24/7 rTokens
+  { ticker: 'NVDAon', label: 'Nvidia 24/7' },
+  { ticker: 'TSLAon', label: 'Tesla 24/7' },
   { ticker: 'PLTR', label: 'Palantir' },
-  { ticker: 'MARA', label: 'MARA Holdings' },
+  { ticker: 'NVDA', label: 'Nvidia' },
+  { ticker: 'TSLA', label: 'Tesla' },
   { ticker: 'MSFT', label: 'Microsoft' },
   { ticker: 'AVGO', label: 'Broadcom' },
   { ticker: 'QQQ', label: 'Nasdaq 100' },
-  { ticker: 'TSLA', label: 'Tesla' },
   { ticker: 'MSTR', label: 'MicroStrategy' },
-  { ticker: 'AMD', label: 'AMD' },
+  { ticker: 'MARA', label: 'MARA Holdings' },
   { ticker: 'AAPL', label: 'Apple' },
 ];
 
@@ -280,7 +298,7 @@ export function DebateConsole({
 
     // 1. Fetch real price snapshot from feed, pre-seeded synchronously to guarantee non-zero base
     const seedPrice = getSeededPrice(symbol);
-    const registryBase = SEEDED_ASSETS[symbol]?.basePrice || (symbol === 'BTC' ? 76500 : 100);
+    const registryBase = SEEDED_ASSETS[symbol]?.basePrice || (symbol === 'BTC' ? 85465 : (seedPrice > 0 ? seedPrice : 100));
     let currentPrice = seedPrice > 0 ? seedPrice : registryBase;
     let change24hVal = 0;
     try {
@@ -594,12 +612,15 @@ export function DebateConsole({
 
   const handleDispatchToAutopilot = () => {
     if (!verdict) return;
+    const verifiedPrice = verdict.targetEntryPrice || verdict.currentPrice || livePriceData?.price;
     onSendToAutopilot({
       asset: verdict.ticker,
       action: verdict.action,
       size_pct: verdict.optimalSizePct,
       confidence: verdict.winRatePct,
       reasoning: verdict.synthesizedReasoning,
+      price: verifiedPrice,
+      targetEntryPrice: verdict.targetEntryPrice || verifiedPrice,
     });
     playTradeApprovedChime();
     setHandoffSuccess(true);

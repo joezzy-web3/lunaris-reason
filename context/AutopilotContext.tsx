@@ -114,19 +114,19 @@ const INITIAL_POSITIONS: Record<string, Position> = {
   BTC: {
     ticker: 'BTC',
     amount: 0.045,
-    entryPrice: 77350,
-    currentPrice: 79820,
-    unrealizedPnl: 111.15,
-    unrealizedPnlPct: 3.19,
+    entryPrice: 82450,
+    currentPrice: 85465,
+    unrealizedPnl: 135.67,
+    unrealizedPnlPct: 3.65,
     class: 'CX',
   },
   NVDAon: {
     ticker: 'NVDAon',
     amount: 18,
-    entryPrice: 182.5,
-    currentPrice: 186.4,
-    unrealizedPnl: 70.2,
-    unrealizedPnlPct: 2.14,
+    entryPrice: 222.5,
+    currentPrice: 230.2,
+    unrealizedPnl: 138.6,
+    unrealizedPnlPct: 3.46,
     class: 'EQ',
   },
 };
@@ -349,7 +349,11 @@ const [ledger, setLedger] = useState<AutopilotLedgerEntry[]>(() => {
     }
   }, [isExecuting, isTurbo, autoExitPct, maxOpenPositions, cashBalance, positions, ledger]);
 
-  const monitoredTickers = ['BTC', 'ETH', 'SOL', 'NVDA', 'TSLA', 'MSTR', 'COIN', 'AAPL'];
+  const monitoredTickers = [
+    'BTC', 'ETH', 'SOL', 'NVDA', 'TSLA', 'MSTR', 'COIN', 'AAPL',
+    'XAU', 'PAXG', 'WTI', 'BRENT', 'XAG', 'COPPER', 'UST10Y', 'TBILL', 'REIT', 'URANIUM', 'AGRI', 'USDY',
+    'PLTR', 'QQQ', 'MSFT', 'AVGO'
+  ];
 
   const calculateTotalValue = useCallback((
     posMap: Record<string, Position> = positionsRef.current,
@@ -489,7 +493,7 @@ const [ledger, setLedger] = useState<AutopilotLedgerEntry[]>(() => {
       const activeCount = (Object.values(currentPos) as Position[]).filter((p: Position) => Boolean(p && p.amount > 0)).length;
       const maxSlots = maxOpenPositionsRef.current || 3;
       if (activeCount < maxSlots && nextCash >= 1500) {
-        const candidateTickers = ['BTC', 'ETH', 'SOL', 'SUI', 'NVDAon', 'TSLAon', 'BGB', 'MSTR'];
+        const candidateTickers = ['BTC', 'ETH', 'SOL', 'SUI', 'NVDAon', 'TSLAon', 'BGB', 'MSTR', 'XAU', 'PAXG', 'WTI', 'UST10Y', 'REIT', 'COPPER', 'PLTR', 'QQQ'];
         const unheld = candidateTickers.filter((t) => {
           const cleanT = t.toUpperCase().replace('/USDT', '').replace('ON', '');
           return !Object.keys(currentPos).some((k) => {
@@ -797,13 +801,30 @@ const [ledger, setLedger] = useState<AutopilotLedgerEntry[]>(() => {
    */
   const handleIncomingCouncilSignal = useCallback(async (proposal: TradeProposal) => {
     if (!proposal || !proposal.asset) return;
-    const ticker = proposal.asset.toUpperCase();
-    const quote = portfolio[ticker]?.price || getSeededPrice(ticker);
+    const rawTicker = proposal.asset;
+    const cleanSym = rawTicker
+      .replace(/\/(USDT|USD)$/i, '')
+      .replace(/-(USDT|USD)$/i, '')
+      .trim();
+    const ticker = cleanSym === 'NVDAON' ? 'NVDAon' : cleanSym === 'TSLAON' ? 'TSLAon' : cleanSym;
+
+    // Prioritize verified market price provided by deliberation proposal
+    let quote = (typeof proposal.price === 'number' && proposal.price > 0)
+      ? proposal.price
+      : (typeof proposal.targetEntryPrice === 'number' && proposal.targetEntryPrice > 0)
+      ? proposal.targetEntryPrice
+      : (portfolio[ticker]?.price || portfolio[rawTicker]?.price);
+
+    if (!quote || quote <= 0 || (quote === 100 && !['TBILL', 'UST10Y'].includes(ticker))) {
+      const snap = await fetchPriceSnapshot(ticker);
+      quote = (snap && snap.price > 0) ? snap.price : getSeededPrice(ticker);
+    }
+
     const targetSizeUsd = 3000;
     const units = parseFloat((targetSizeUsd / quote).toFixed(quote < 10 ? 2 : 4));
     const cost = parseFloat((units * quote).toFixed(2));
 
-    if (cashBalanceRef.current >= cost) {
+    if (cashBalanceRef.current >= cost && cost > 0) {
       const prevCash = cashBalanceRef.current;
       const nextCash = parseFloat((prevCash - cost).toFixed(2));
       setCashBalance(nextCash);

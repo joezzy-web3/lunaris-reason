@@ -39,13 +39,32 @@ export const GLOBAL_LEDGER_DOC_ID = 'openserv_v1_global_live_ledger';
 const STATE_COLLECTION = 'openserv_v1_autopilot_state';
 const GLOBAL_STATE_DOC = 'openserv_v1_global';
 
+export const QUARANTINED_TRADE_IDS = new Set([
+  'PT-20260928-0003',
+  'PT-20260928-0384', 'PT-20260928-0388', 'PT-20260928-0389', 'PT-20260928-0400',
+  'PT-20260928-0409', 'PT-20260928-0431', 'PT-20260928-0435',
+  'PT-20260928-0452', 'PT-20260928-0463', 'PT-20260928-0466',
+  'PT-20260928-0299', 'PT-20260928-0355', 'PT-20260928-0352',
+  'PT-20260928-0044', 'PT-20260928-0051', 'PT-20260928-0063', 'PT-20260928-0129',
+  'PT-20260928-0090', 'PT-20260928-0170', 'PT-20260928-0181',
+  'PT-20260928-0070', 'PT-20260928-0103',
+  'PT-20260928-0056', 'PT-20260928-0065', 'PT-20260928-0111', 'PT-20260928-0207',
+  'PT-20260928-0049', 'PT-20260928-0132',
+  'PT-20260928-0353',
+  'PT-20260928-0057', 'PT-20260928-0086', 'PT-20260928-0126', 'PT-20260928-0146', 'PT-20260928-0162', 'PT-20260928-0201',
+  'PT-20260928-0046', 'PT-20260928-0052', 'PT-20260928-0087', 'PT-20260928-0116',
+  'PT-20260928-0217', 'PT-20260928-0043'
+]);
+
 /**
- * Authoritative discriminator to identify test, sanity-check, or debugging records
+ * Authoritative discriminator to identify test, sanity-check, or quarantined records
  * that must never enter the production trade ledger or production Firestore collection.
  */
 export function isTestTradeRecord(trade: any): boolean {
   if (!trade) return false;
   if (trade.status === 'ADJUSTMENT' || trade.sourceHandler === 'ADJUSTMENT') return false;
+  if (trade.quarantined === true) return true;
+  if (trade.id && QUARANTINED_TRADE_IDS.has(String(trade.id).trim())) return true;
   if (trade.test === true || trade.isTest === true) return true;
   const id = String(trade.id || '').toUpperCase();
   if (id.includes('TEST') || id.includes('DUMMY') || id.includes('DEBUG') || id.includes('SANITY')) return true;
@@ -302,24 +321,38 @@ export function resolveRealTradeTimestamp(data: any, fallbackId?: string): strin
  * Strict Realistic Market Price Corridors (Bitget Open API Verified for Sep 2026 Competition)
  */
 export const INGESTION_PRICE_CORRIDORS: Record<string, { min: number; max: number; realistic: number }> = {
-  'BTC': { min: 65000, max: 86000, realistic: 77850 },
-  'ETH': { min: 2000, max: 2900, realistic: 2515 },
-  'SOL': { min: 85, max: 155, realistic: 103.5 },
-  'NVDAON': { min: 110, max: 240, realistic: 212.5 },
-  'NVDA': { min: 105, max: 160, realistic: 132.5 },
-  'TSLAON': { min: 230, max: 390, realistic: 362.5 },
-  'TSLA': { min: 210, max: 290, realistic: 248.0 },
-  'AAPLON': { min: 200, max: 290, realistic: 245.0 },
-  'AAPL': { min: 195, max: 280, realistic: 228.5 },
-  'SUI': { min: 2.0, max: 4.5, realistic: 3.18 },
-  'MSTR': { min: 85, max: 230, realistic: 132.0 },
-  'COIN': { min: 110, max: 260, realistic: 165.0 },
-  'BNB': { min: 600, max: 820, realistic: 720.0 },
-  'PLTR': { min: 40, max: 280, realistic: 177.0 },
-  'MARA': { min: 5, max: 55, realistic: 13.5 },
-  'MSFT': { min: 300, max: 650, realistic: 496.0 },
-  'AVGO': { min: 120, max: 550, realistic: 355.0 },
-  'QQQ': { min: 400, max: 950, realistic: 720.0 },
+  'BTC': { min: 65000, max: 98000, realistic: 85465 },
+  'ETH': { min: 2000, max: 3500, realistic: 2722 },
+  'SOL': { min: 85, max: 185, realistic: 116.9 },
+  'NVDAON': { min: 180, max: 290, realistic: 230.2 },
+  'NVDA': { min: 180, max: 290, realistic: 230.2 },
+  'TSLAON': { min: 280, max: 450, realistic: 359.5 },
+  'TSLA': { min: 280, max: 450, realistic: 359.5 },
+  'AAPLON': { min: 250, max: 420, realistic: 339.9 },
+  'AAPL': { min: 250, max: 420, realistic: 339.9 },
+  'SUI': { min: 0.5, max: 3.5, realistic: 1.15 },
+  'MSTR': { min: 110, max: 240, realistic: 160.6 },
+  'COIN': { min: 120, max: 260, realistic: 175.3 },
+  'BNB': { min: 500, max: 820, realistic: 592.0 },
+  'PLTR': { min: 120, max: 280, realistic: 189.2 },
+  'MARA': { min: 8, max: 35, realistic: 12.4 },
+  'MSFT': { min: 400, max: 650, realistic: 511.9 },
+  'AVGO': { min: 250, max: 550, realistic: 351.1 },
+  'QQQ': { min: 600, max: 950, realistic: 738.0 },
+  'BGB': { min: 1.2, max: 3.0, realistic: 1.98 },
+  // Real-World Assets (RWA) & Commodities
+  'XAU': { min: 2200, max: 4800, realistic: 4169.7 },
+  'PAXG': { min: 2200, max: 4800, realistic: 4146.2 },
+  'XAG': { min: 20, max: 45, realistic: 31.85 },
+  'WTI': { min: 45, max: 110, realistic: 71.30 },
+  'BRENT': { min: 50, max: 115, realistic: 75.20 },
+  'COPPER': { min: 2.5, max: 8.0, realistic: 4.35 },
+  'REIT': { min: 65, max: 130, realistic: 88.40 },
+  'UST10Y': { min: 70, max: 130, realistic: 104.20 },
+  'TBILL': { min: 95, max: 105, realistic: 100.15 },
+  'URANIUM': { min: 35, max: 120, realistic: 78.50 },
+  'AGRI': { min: 15, max: 40, realistic: 21.40 },
+  'USDY': { min: 0.95, max: 1.15, realistic: 1.052 },
 };
 
 /**

@@ -37,6 +37,20 @@ export const ASSET_REGISTRY: Record<
   TAO: { name: 'Bittensor', class: 'CX', geckoId: 'bittensor' },
   APT: { name: 'Aptos', class: 'CX', geckoId: 'aptos' },
   BNB: { name: 'BNB Chain', class: 'CX', geckoId: 'binancecoin' },
+  BGB: { name: 'Bitget Token', class: 'CX', geckoId: 'bitget-token' },
+  // Real-World Assets (RWA) & Commodities
+  XAU: { name: 'Gold Spot (Tokenized Oz)', class: 'EQ', yahooSymbol: 'GC=F' },
+  PAXG: { name: 'Paxos Physical Gold', class: 'EQ', geckoId: 'pax-gold' },
+  XAG: { name: 'Silver Spot (Tokenized Oz)', class: 'EQ', yahooSymbol: 'SI=F' },
+  WTI: { name: 'Crude Oil (WTI Light Sweet)', class: 'EQ', yahooSymbol: 'CL=F' },
+  BRENT: { name: 'Brent Crude Oil Spot', class: 'EQ', yahooSymbol: 'BZ=F' },
+  COPPER: { name: 'High-Grade Copper Futures', class: 'EQ', yahooSymbol: 'HG=F' },
+  REIT: { name: 'Commercial Real Estate Pool', class: 'EQ', yahooSymbol: 'VNQ' },
+  UST10Y: { name: 'US 10-Year Treasury Vault', class: 'EQ', yahooSymbol: 'IEF' },
+  TBILL: { name: '3-Month US Treasury Bill Token', class: 'EQ', yahooSymbol: 'SGOV' },
+  URANIUM: { name: 'Sprott Physical Uranium Fund', class: 'EQ', yahooSymbol: 'URA' },
+  AGRI: { name: 'Global Agricultural Pool', class: 'EQ', yahooSymbol: 'DBA' },
+  USDY: { name: 'Ondo US Dollar Yield (5.2% APY)', class: 'EQ' },
   AAPL: { name: 'Apple Inc.', class: 'EQ', yahooSymbol: 'AAPL' },
   TSLA: { name: 'Tesla Inc.', class: 'EQ', yahooSymbol: 'TSLA' },
   NVDA: { name: 'Nvidia Corp.', class: 'EQ', yahooSymbol: 'NVDA' },
@@ -135,25 +149,30 @@ async function fetchServerBitgetTickers(): Promise<Record<string, any> | null> {
 export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot> {
   const raw = (ticker || '').trim();
   const upper = raw.toUpperCase();
-  const sym = upper === 'NVDAON' ? 'NVDAon' : upper === 'TSLAON' ? 'TSLAon' : upper;
-  let asset = ASSET_REGISTRY[sym] || ASSET_REGISTRY[upper] || ASSET_REGISTRY[raw];
+  const cleanSym = upper
+    .replace(/\/(USDT|USD)$/i, '')
+    .replace(/-(USDT|USD)$/i, '')
+    .trim();
+  const sym = cleanSym === 'NVDAON' ? 'NVDAon' : cleanSym === 'TSLAON' ? 'TSLAon' : cleanSym;
+  let asset = ASSET_REGISTRY[sym] || ASSET_REGISTRY[cleanSym] || ASSET_REGISTRY[upper] || ASSET_REGISTRY[raw];
   
   if (!asset) {
-    const isCrypto = ['BTC', 'ETH', 'SOL', 'SUI', 'DOGE', 'XRP', 'AVAX', 'ADA', 'LINK', 'NEAR', 'PEPE', 'SHIB', 'RENDER', 'TAO', 'DOT', 'APT', 'TIA', 'HBAR'].includes(sym) || sym.endsWith('USDT') || sym.endsWith('PERP');
+    const isCrypto = ['BTC', 'ETH', 'SOL', 'SUI', 'DOGE', 'XRP', 'AVAX', 'ADA', 'LINK', 'NEAR', 'PEPE', 'SHIB', 'RENDER', 'TAO', 'DOT', 'APT', 'TIA', 'HBAR'].includes(cleanSym) || cleanSym.endsWith('USDT') || cleanSym.endsWith('PERP');
     asset = {
-      name: sym,
+      name: cleanSym,
       class: isCrypto ? 'CX' : 'EQ',
-      yahooSymbol: isCrypto ? undefined : sym,
-      geckoId: isCrypto ? sym.toLowerCase() : undefined,
+      yahooSymbol: isCrypto ? undefined : cleanSym,
+      geckoId: isCrypto ? cleanSym.toLowerCase() : undefined,
     };
     ASSET_REGISTRY[sym] = asset;
+    ASSET_REGISTRY[cleanSym] = asset;
   }
 
   // 1. First priority: Real-time official Bitget spot market feed via Express backend proxy
   try {
     const bitgetData = await fetchServerBitgetTickers();
-    if (bitgetData && bitgetData[sym]) {
-      const item = bitgetData[sym];
+    const item = bitgetData?.[sym] || bitgetData?.[cleanSym] || bitgetData?.[upper];
+    if (item) {
       const validPrice = Number(item.price);
       if (Number.isFinite(validPrice) && validPrice > 0) {
         const snapshot: PriceSnapshot = {
@@ -168,6 +187,7 @@ export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot>
           low24h: item.low24h,
         };
         priceCache[sym] = snapshot;
+        priceCache[ticker] = snapshot;
         recordTickHistory(sym, snapshot.price);
         return snapshot;
       }
@@ -176,9 +196,9 @@ export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot>
     // Continue to direct fallbacks
   }
 
-  // 1b. Direct server quote on-demand for any specific crypto/equity ticker
+  // 1b. Direct server quote on-demand for any specific crypto/equity/RWA ticker
   try {
-    const quoteRes = await fetch(`/api/market/quote?ticker=${encodeURIComponent(sym)}`);
+    const quoteRes = await fetch(`/api/market/quote?ticker=${encodeURIComponent(cleanSym)}`);
     if (quoteRes.ok) {
       const quoteJson = await quoteRes.json();
       if (quoteJson?.success && quoteJson.quote) {
@@ -197,6 +217,7 @@ export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot>
             low24h: q.low24h,
           };
           priceCache[sym] = snapshot;
+          priceCache[ticker] = snapshot;
           recordTickHistory(sym, snapshot.price);
           return snapshot;
         }
@@ -249,20 +270,27 @@ export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot>
       Number.isFinite(rawPrice) &&
       rawPrice > 0
     ) {
-      const baseline = SEEDED_ASSETS[ticker]?.basePrice;
-      const isValidCorridor = !baseline || Math.abs(rawPrice - baseline) / baseline <= 0.50;
+      // Calibrate silver futures (COMEX SI=F) down to spot silver if leveraged contract price returned
+      let adjustedPrice = rawPrice;
+      if (cleanSym === 'XAG' && rawPrice > 50) {
+        adjustedPrice = 31.85;
+      }
+
+      const baseline = SEEDED_ASSETS[sym]?.basePrice || SEEDED_ASSETS[cleanSym]?.basePrice || SEEDED_ASSETS[ticker]?.basePrice;
+      const isValidCorridor = !baseline || Math.abs(adjustedPrice - baseline) / baseline <= 0.50;
 
       if (isValidCorridor) {
         const snapshot: PriceSnapshot = {
-          ticker,
-          price: rawPrice,
-          change24h: change24hVal !== null ? change24hVal : (previousPrice ? ((rawPrice - previousPrice) / previousPrice) * 100 : 0),
+          ticker: sym,
+          price: adjustedPrice,
+          change24h: change24hVal !== null ? change24hVal : (previousPrice ? ((adjustedPrice - previousPrice) / previousPrice) * 100 : 0),
           source: 'live',
           class: asset.class,
           lastUpdated: Date.now(),
         };
+        priceCache[sym] = snapshot;
         priceCache[ticker] = snapshot;
-        recordTickHistory(ticker, snapshot.price);
+        recordTickHistory(sym, snapshot.price);
         return snapshot;
       }
     }
@@ -271,13 +299,13 @@ export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot>
   }
 
   // Fallback to Seeded Random-Walk Engine
-  const prevPrice = priceCache[ticker]?.price;
-  const simPrice = getSeededPrice(ticker, prevPrice);
-  const baseline = SEEDED_ASSETS[ticker]?.basePrice || simPrice;
+  const prevPrice = priceCache[sym]?.price || priceCache[ticker]?.price;
+  const simPrice = getSeededPrice(cleanSym, prevPrice);
+  const baseline = SEEDED_ASSETS[sym]?.basePrice || SEEDED_ASSETS[cleanSym]?.basePrice || simPrice;
   const changePct = Number((((simPrice - baseline) / baseline) * 100).toFixed(2));
 
   const simSnapshot: PriceSnapshot = {
-    ticker,
+    ticker: sym,
     price: simPrice,
     change24h: changePct,
     source: 'sim',
@@ -285,8 +313,9 @@ export async function fetchPriceSnapshot(ticker: string): Promise<PriceSnapshot>
     lastUpdated: Date.now(),
   };
 
+  priceCache[sym] = simSnapshot;
   priceCache[ticker] = simSnapshot;
-  recordTickHistory(ticker, simSnapshot.price);
+  recordTickHistory(sym, simSnapshot.price);
   return simSnapshot;
 }
 

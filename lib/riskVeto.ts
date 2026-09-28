@@ -6,6 +6,8 @@ export interface TradeProposal {
   size_pct: number;
   confidence: number;
   reasoning: string;
+  price?: number;
+  targetEntryPrice?: number;
 }
 
 export type RiskOverrideCode =
