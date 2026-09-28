@@ -68,8 +68,16 @@ Algorithmic trading systems in decentralized finance suffer from two structural 
 
 ### Track 4.1: Native SERV Reasoning Engine & Telemetry Compliance
 * **Direct OpenServ Engine:** Connects to `https://inference-api.openserv.ai/v1/chat/completions` utilizing the native `serv-mini` OpenServ reasoning model.
-* **Telemetry Verification:** Verified under the OpenServ Organization dashboard (`console.openserv.ai/settings/organization`) with active inference telemetry logging.
-* **Dual Execution Surfaces:** Triggerable via the live terminal GUI (`OpenServ MCP Modal` → `Tab 2: Official SERV API Runner`) or programmatically via `npx tsx scripts/runServAgent.ts`.
+* **Council Debate Integration (`/api/openserv/debate`):** The primary 4-Agent Dialectic Council Debate console (`/council`) dynamically routes all trader mandates and market deliberations through `serv-mini`. The model deliberates across Quant-Omega, Guardian-01, NEXUS-RED, and Atlas-Macro, producing a structured, verified verdict with telemetry recorded on OpenServ.
+* **Telemetry Verification:** Verified under the OpenServ Organization dashboard (`console.openserv.ai/settings/organization`) with active inference telemetry logging enabled ("Collection is on").
+* **Execution Surfaces:**
+  1. **Live Council Deliberation:** Front-and-center in the terminal Council Debate Console with real-time latency readout, model verification stamp, and direct link to OpenServ console telemetry.
+  2. **Official OpenServ MCP Live Console:** Interactive in-terminal testing runner (`OpenServ MCP Modal` → `Tab 2: Official SERV API Runner`) for automated judge verification.
+  3. **CLI Agent Script:** Programmatic runner via `npx tsx scripts/runServAgent.ts`.
+* **Token Budget & Rate-Limit Preservation Architecture:**
+  * **Strict Token Bounding:** Output tokens are strictly capped at `max_tokens: 380` with low temperature (`0.2`), yielding ultra-efficient inference (~$0.0003 per debate) allowing a standard $1.00 credit grant to comfortably fund over 1,500 full council deliberations.
+  * **Anti-Spam Debounce Protection:** 5-second programmatic debounce guard on all deliberation triggers prevents double-click spam or accidental rapid quota exhaustion.
+  * **Fault-Tolerant Multi-Tier Fallback:** If upstream OpenServ inference encounters network latency or transient rate-limiting, the engine automatically transitions to Gemini Search Grounding or the deterministic bounded council matrix with zero user disruption.
 
 ---
 

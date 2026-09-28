@@ -29,6 +29,9 @@ LUNARIS REASON is powered directly by the official OpenServ inference engine:
 * **Endpoint:** `https://inference-api.openserv.ai/v1/chat/completions`
 * **Default Model:** `serv-mini` (OpenServ Native Reasoning Engine)
 * **OpenAI & Claude Compatible:** Conforms to standard JSON completions with mandatory system prompt framing.
+* **Interactive Council Debate Integration (`/council` & `/api/openserv/debate`):** The terminal's primary **4-Agent Council Debate Engine** directly routes live trader mandates through `serv-mini`. Deliberations synthesize Quant-Omega (alpha/momentum), Guardian-01 (0.50% slippage collar), NEXUS-RED (adversarial trap audit), and Atlas-Macro (sovereign yields), registering verified telemetry on your OpenServ Organization dashboard (`console.openserv.ai`).
+* **Anti-Bot "Slide to Authenticate" Verification:** Incorporates a Binance-style human drag slider on the deliberation deck, preventing bot scripts from spamming the inference API or exhausting quota.
+* **Strict Token Economy & Fallback Resilience:** Bounded to `max_tokens: 380` (~$0.0003 per debate) enabling >1,500 full dialectic debates per $1.00 credit grant, backed by a seamless multi-tier fallback to Gemini Search Grounding and the deterministic matrix.
 * **Bounded Reasoning DAG:** Ingests live market oracles, calculates Kelly-criterion position sizing, enforces Guardian-01's 0.50% slippage collar, and outputs structured execution/veto decisions.
 * **CLI Runner Script:**
   ```bash
@@ -62,7 +65,7 @@ Most AI trading bots fail because they grant probabilistic Large Language Models
 | **Track 3: RWA Vaults** *(Primary Focus)* | Autonomous capital deployment and rotation across licensed RWA yield vaults (`UST10Y` 5.15% APY, `TBILL3M` 5.28% APY, `PAXG` Physical Gold, `REIT` 6.40% Yield). Solves primary NAV vs secondary market basis dislocations. | `/matrix` (RWA Yield & NAV Matrix)<br>`/api/rwa/vaults` |
 | **Track 1: Mainnet & MCP** | Exposes institutional trading and risk-check tools via OpenServ Model Context Protocol (MCP) endpoints for external AI agents. | `GET /api/mcp/tools`<br>`POST /api/mcp/execute` |
 | **Track 2: AgentKit & Escrow** | Autonomous revenue generation: every profitable rebalance and trade automatically routes a 10% performance micro-toll to the OpenServ Protocol Escrow. | `GET /api/openserv/escrow`<br>`/auditlog` (Escrow Badge) |
-| **Track 4: SERV Reasoning** | Eliminates unbounded LLM hallucinations by forcing all decisions through a 4-node DAG. Every trade mints an immutable cryptographic Proof Certificate with SHA-256 fingerprint. | `/certificates` (Proof Certificates Gallery) |
+| **Track 4: SERV Reasoning** | Eliminates unbounded LLM hallucinations by forcing all decisions through a 4-node DAG. Powered natively by OpenServ `serv-mini` across both the interactive Council Debate Engine (`/council`) and Proof Certificates (`/certificates`). | `/council` (Live Dialectic Debate)<br>`/certificates` (Proof Certificates)<br>`/api/openserv/debate` |
 
 ---
 

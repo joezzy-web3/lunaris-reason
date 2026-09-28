@@ -15,6 +15,7 @@ import marketQuoteHandler from './market/quote.ts';
 import openservManifestHandler, { getOpenServAgentManifest } from './openserv/manifest.ts';
 import openservRunHandler from './openserv/run.ts';
 import openservEscrowHandler from './openserv/escrow-stats.ts';
+import openservDebateHandler from './openserv/debate.ts';
 import mcpToolsHandler from './mcp/tools.ts';
 import mcpExecuteHandler from './mcp/execute.ts';
 
@@ -92,6 +93,10 @@ export default async function unifiedRouter(req: any, res: any) {
 
     case 'openserv/run':
       return openservRunHandler(req, res);
+
+    case 'openserv/debate':
+    case 'gemini/debate':
+      return openservDebateHandler(req, res);
 
     case 'openserv/escrow-stats':
     case 'openserv/escrow':

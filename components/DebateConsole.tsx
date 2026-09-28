@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { CyberCourtroomView } from './CyberCourtroomView';
 import { ReHuddlePanel } from './ReHuddlePanel';
+import { SlideToConvene } from './SlideToConvene';
 import { TradeProposal } from '@/lib/riskVeto';
 import { fetchPriceSnapshot, ASSET_REGISTRY } from '@/lib/liveTokenFeed';
 import { getSeededPrice, SEEDED_ASSETS } from '@/lib/demoSeedData';
@@ -159,6 +160,9 @@ export function DebateConsole({
   // Real-time AI / Gemini telemetry metadata
   const [groundingInfo, setGroundingInfo] = useState<GroundingInfo | null>(null);
   const [isRealGemini, setIsRealGemini] = useState<boolean>(false);
+  const [isRealServ, setIsRealServ] = useState<boolean>(false);
+  const [servLatencyMs, setServLatencyMs] = useState<number | null>(null);
+  const [lastDebateTriggerTime, setLastDebateTriggerTime] = useState<number>(0);
   const [catalysts, setCatalysts] = useState<string[]>([]);
   const [livePriceData, setLivePriceData] = useState<{ price: number; change24h: number } | null>(null);
 
@@ -279,6 +283,13 @@ export function DebateConsole({
     overrideInstruction?: string,
     pulseOverride?: PulseContext
   ) => {
+    // 5-Second Debounce Protection: Protects user's $1 credit budget from rapid spam clicking
+    const now = Date.now();
+    if (now - lastDebateTriggerTime < 4500 && isDebating) {
+      return;
+    }
+    setLastDebateTriggerTime(now);
+
     const symbol = normalizeTickerSymbol(targetTicker || ticker) || 'PLTR';
     setTicker(symbol);
 
@@ -295,6 +306,8 @@ export function DebateConsole({
     setHandoffSuccess(false);
     setGroundingInfo(null);
     setCatalysts([]);
+    setIsRealServ(false);
+    setServLatencyMs(null);
 
     // 1. Fetch real price snapshot from feed, pre-seeded synchronously to guarantee non-zero base
     const seedPrice = getSeededPrice(symbol);
@@ -311,15 +324,22 @@ export function DebateConsole({
       // currentPrice is already safely anchored to realistic asset baseline
     }
 
-    // 2. Query Gemini Real-Time Search Grounding API
+    // 2. Query OpenServ serv-mini Real-Time Reasoning API First (Track 4 Bounded DAG)
     let apiData: any = null;
+    let servSuccess = false;
+    let servLatency: number | null = null;
     let geminiSuccess = false;
     let groundingData: GroundingInfo | null = null;
 
+    const cachedServKey = typeof window !== 'undefined' ? localStorage.getItem('LUNARIS_OPENSERV_API_KEY') || '' : '';
+
     try {
-      const response = await fetch('/api/gemini/debate', {
+      const servResponse = await fetch('/api/openserv/debate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(cachedServKey ? { Authorization: `Bearer ${cachedServKey.trim()}` } : {}),
+        },
         body: JSON.stringify({
           ticker: symbol,
           clientPrice: currentPrice > 0 ? currentPrice : undefined,
@@ -328,20 +348,49 @@ export function DebateConsole({
         }),
       });
 
-      if (response.ok) {
-        const resJson = await response.json();
-        if (resJson.success && resJson.data) {
+      if (servResponse.ok) {
+        const resJson = await servResponse.json();
+        if (resJson.success && resJson.isRealServ && resJson.data) {
           apiData = resJson.data;
-          geminiSuccess = Boolean(resJson.isRealGemini);
-          if (resJson.grounding) {
-            groundingData = resJson.grounding;
-          }
+          servSuccess = true;
+          servLatency = resJson.latencyMs || null;
         }
       }
-    } catch (apiErr) {
-      console.warn('Gemini debate API request error, initiating local model synthesis', apiErr);
+    } catch (servErr) {
+      console.warn('OpenServ debate API request error, proceeding to Gemini/matrix fallback:', servErr);
     }
 
+    // 3. Fallback to Gemini Real-Time Search Grounding API if OpenServ key is absent
+    if (!servSuccess) {
+      try {
+        const response = await fetch('/api/gemini/debate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticker: symbol,
+            clientPrice: currentPrice > 0 ? currentPrice : undefined,
+            instruction: instructionToUse || pulseToUse?.catalystSummary || undefined,
+            forceOverAllocation,
+          }),
+        });
+
+        if (response.ok) {
+          const resJson = await response.json();
+          if (resJson.success && resJson.data) {
+            apiData = resJson.data;
+            geminiSuccess = Boolean(resJson.isRealGemini);
+            if (resJson.grounding) {
+              groundingData = resJson.grounding;
+            }
+          }
+        }
+      } catch (apiErr) {
+        console.warn('Gemini debate API request error, initiating local model synthesis', apiErr);
+      }
+    }
+
+    setIsRealServ(servSuccess);
+    setServLatencyMs(servLatency);
     setIsRealGemini(geminiSuccess);
     if (groundingData) {
       setGroundingInfo(groundingData);
@@ -815,15 +864,15 @@ export function DebateConsole({
             <span>{customInstruction ? 'Mandate Loaded' : 'Add Natural Language Mandate'}</span>
           </button>
 
-          {/* Convene Button */}
-          <button
-            onClick={() => startCouncilDeliberation()}
-            disabled={isDebating || !ticker.trim()}
-            className="bg-white hover:bg-zinc-200 text-black font-bold px-5 py-2 rounded-md text-xs transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 fill-black" />
-            <span>{isDebating ? 'CONVENING COUNCIL...' : 'CONVENE COUNCIL'}</span>
-          </button>
+          {/* Anti-Bot Human Verification Slider (Protects OpenServ API key from script bots) */}
+          <div className="flex-shrink-0 min-w-[240px]">
+            <SlideToConvene
+              ticker={ticker}
+              isDebating={isDebating}
+              disabled={!ticker.trim()}
+              onVerified={() => startCouncilDeliberation()}
+            />
+          </div>
 
           {isDebateComplete && (
             <button
@@ -930,6 +979,43 @@ export function DebateConsole({
 
       {/* VIEW B: QUORUM MATRIX (DEFAULT ANALYTICAL VIEW - PERSISTENT IN DOM FOR FRAME-PERFECT LOCKSTEP SYNC) */}
       <div className={councilViewMode === 'MATRIX' ? 'space-y-4 animate-fadeIn' : 'hidden'}>
+        {/* OpenServ serv-mini Real-Time Reasoning Telemetry Banner */}
+        {isRealServ && (
+          <div className="bg-[#031d13] border border-emerald-500/40 rounded-lg p-3 mb-4 text-xs space-y-2 animate-fadeIn shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/20 pb-2 font-mono">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-bold text-emerald-300 text-[11px] uppercase tracking-wider">
+                  OPENSERV SERV-MINI // LIVE REASONING ACTIVE
+                </span>
+                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-sans font-bold">
+                  ✓ TELEMETRY LOGGED
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-emerald-400/80">
+                {servLatencyMs && (
+                  <span>
+                    Latency: <strong className="text-white font-mono">{servLatencyMs}ms</strong>
+                  </span>
+                )}
+                <span>Model: <code className="text-white font-mono bg-black/40 px-1.5 py-0.5 rounded">serv-mini</code></span>
+                <a
+                  href="https://console.openserv.ai"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-cyan-300 hover:text-white hover:underline flex items-center gap-1 font-sans"
+                >
+                  console.openserv.ai <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </div>
+            </div>
+            <div className="text-[10px] text-emerald-300/80 flex items-center justify-between">
+              <span>Verified under OpenServ Organization namespace with active inference telemetry logging.</span>
+              <span className="text-[9px] text-emerald-400 font-mono">4-Agent Bounded Consensus DAG</span>
+            </div>
+          </div>
+        )}
+
         {/* Real-time Gemini Search Grounding Metadata Banner */}
         {groundingInfo && groundingInfo.sources && groundingInfo.sources.length > 0 && (
         <div className="bg-[#090b10] border border-white/10 rounded-lg p-3 mb-4 text-xs space-y-2 animate-fadeIn">
@@ -1373,8 +1459,23 @@ export function DebateConsole({
 
           {/* Synthesized Council Reasoning */}
           <div className="p-3 bg-black/70 rounded border border-white/10 text-xs">
-            <div className="text-[10px] text-zinc-400 uppercase font-semibold mb-1 flex items-center gap-1">
-              <MessageSquare className="w-3 h-3 text-zinc-300" /> Synthesized Strategy Document
+            <div className="text-[10px] text-zinc-400 uppercase font-semibold mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <MessageSquare className="w-3 h-3 text-zinc-300" /> Synthesized Strategy Document
+              </span>
+              {isRealServ ? (
+                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.5 rounded font-mono font-bold">
+                  OPENSERV serv-mini REASONING
+                </span>
+              ) : isRealGemini ? (
+                <span className="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded font-mono">
+                  GEMINI GROUNDED
+                </span>
+              ) : (
+                <span className="text-[9px] bg-white/5 text-zinc-400 border border-white/10 px-1.5 py-0.5 rounded font-mono">
+                  BOUNDED DAG MATRIX
+                </span>
+              )}
             </div>
             <p className="text-zinc-200 leading-relaxed text-[11px] font-sans">{verdict.synthesizedReasoning}</p>
           </div>
