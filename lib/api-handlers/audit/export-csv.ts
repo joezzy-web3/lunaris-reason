@@ -1,7 +1,7 @@
 // api/audit/export-csv.ts
 // Vercel Serverless Function: Download full audit trail as CSV backed by Cloudflare D1
 import { queryD1 } from './d1.ts';
-import embeddedTrades from '../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
+import embeddedTrades from '../../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
 
 export const config = {
   maxDuration: 15,

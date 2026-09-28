@@ -84,3 +84,41 @@ export async function saveTradeToD1(t: any): Promise<void> {
     [String(t.auditSeq), String(t.accountBalance), new Date().toISOString()]
   );
 }
+
+export default async function handler(req: any, res: any) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const { accountId, databaseId, apiToken } = getD1Config();
+  const configured = Boolean(accountId && databaseId && apiToken);
+
+  try {
+    if (!configured) {
+      return res.status(200).json({
+        success: false,
+        connected: false,
+        error: 'Cloudflare D1 credentials missing from environment',
+        tip: 'Configure LUNARIS_CF_ACCOUNT_ID, LUNARIS_D1_DATABASE_ID, and LUNARIS_CF_API_TOKEN',
+      });
+    }
+
+    const meta = await queryD1('SELECT key, val FROM audit_meta');
+    return res.status(200).json({
+      success: true,
+      connected: true,
+      database: 'Cloudflare D1 SQL Ledger',
+      meta,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      connected: false,
+      error: err.message,
+    });
+  }
+}

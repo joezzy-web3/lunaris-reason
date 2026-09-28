@@ -1,7 +1,7 @@
 // api/audit/all-trades.ts
 // Vercel Serverless Function: Export audit trades backup backed by Cloudflare D1
 import { queryD1 } from './d1.ts';
-import embeddedTrades from '../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
+import embeddedTrades from '../../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
 
 export const config = {
   maxDuration: 15,

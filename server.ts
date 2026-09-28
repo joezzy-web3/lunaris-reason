@@ -18,7 +18,7 @@ import { validatePriceTick, getRejectedTicksLog } from './lib/priceSanityGuard';
 import { getBitgetTakerFeeRate, estimateL2OrderbookSlippage, finalizeTradeClose } from './lib/tradeMath';
 import { runIncrementalReconciliation } from './scripts/reconcileAuditTrades';
 import { evaluateTradeRisk, TradeProposal } from './lib/riskVeto';
-import { saveTradeToD1 } from './api/audit/d1.ts';
+import { saveTradeToD1 } from './lib/api-handlers/audit/d1.ts';
 import { initializeApp as initFirebaseApp, getApps as getFirebaseApps } from 'firebase/app';
 import { getFirestore, doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';

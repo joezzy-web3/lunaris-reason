@@ -218,7 +218,7 @@ export const OpenServMcpModal: React.FC<OpenServMcpModalProps> = ({ isOpen, onCl
         },
         body: JSON.stringify({
           apiKey: servApiKey.trim(),
-          model: 'gpt-4o-mini',
+          model: 'serv-mini',
         }),
       });
 
