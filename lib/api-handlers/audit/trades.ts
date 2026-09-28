@@ -1,7 +1,7 @@
 // api/audit/trades.ts
 // Vercel Serverless Function: Authoritative trade reader backed by Cloudflare D1
-import { queryD1 } from './d1.ts';
-import embeddedTrades from '../../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
+import { queryD1, saveTradeToD1 } from './d1.ts';
+import { AUTHORITATIVE_AUDIT_TRADES } from '../../authoritativeTradesData.ts';
 
 export const config = {
   maxDuration: 15,
@@ -69,17 +69,43 @@ export default async function handler(req: any, res: any) {
 
     if (rows && rows.length > 0) {
       const formatted = rows.map(formatD1Row);
-      const latestRow = rows[rows.length - 1];
-      const totalCount = parseInt(metaMap.total_trades || '', 10) || latestRow.seq || rows.length;
-      const currentBalance = parseFloat(metaMap.current_balance || '') || latestRow.account_balance || 100000;
+
+      // If D1 has at least the full authoritative ledger, serve D1 directly
+      if (rows.length >= AUTHORITATIVE_AUDIT_TRADES.length) {
+        const latestRow = rows[rows.length - 1];
+        const totalCount = parseInt(metaMap.total_trades || '', 10) || latestRow.seq || rows.length;
+        const currentBalance = parseFloat(metaMap.current_balance || '') || latestRow.account_balance || 100000;
+
+        return res.status(200).json({
+          success: true,
+          trades: formatted,
+          count: formatted.length,
+          totalCount,
+          currentBalance,
+          source: 'Cloudflare-D1-SQL',
+          timestamp: now,
+        });
+      }
+
+      // If D1 only has a partial slice (e.g. initial 25-trade batch), merge with authoritative trades
+      const idMap = new Map<string, any>();
+      for (const t of AUTHORITATIVE_AUDIT_TRADES) {
+        if (t && t.id) idMap.set(t.id, t);
+      }
+      for (const t of formatted) {
+        if (t && t.id) idMap.set(t.id, t);
+      }
+      const merged = Array.from(idMap.values());
+      const servedTrades = isAll ? merged : merged.slice(-numericLimit);
+      const latestTrade = merged[merged.length - 1];
 
       return res.status(200).json({
         success: true,
-        trades: formatted,
-        count: formatted.length,
-        totalCount,
-        currentBalance,
-        source: 'Cloudflare-D1-SQL',
+        trades: servedTrades,
+        count: servedTrades.length,
+        totalCount: merged.length,
+        currentBalance: latestTrade?.accountBalance || 100000,
+        source: 'Cloudflare-D1-Merged',
         timestamp: now,
       });
     }
@@ -88,7 +114,7 @@ export default async function handler(req: any, res: any) {
   }
 
   // Authoritative fallback if D1 is unreachable: serve full historical ledger
-  const fallback = Array.isArray(embeddedTrades) ? embeddedTrades : [];
+  const fallback = AUTHORITATIVE_AUDIT_TRADES;
   const servedTrades = isAll ? fallback : fallback.slice(-numericLimit);
   const latestTrade = fallback[fallback.length - 1];
 

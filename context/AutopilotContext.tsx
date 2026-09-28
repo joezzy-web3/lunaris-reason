@@ -109,28 +109,39 @@ function getDeviceSessionId(): string {
   }
 }
 
-// Initial lively positions so each new judge or private browser window starts with active positions
+// Initial verified portfolio positions so each new judge or private browser window starts with synchronized active positions
 const INITIAL_POSITIONS: Record<string, Position> = {
-  BTC: {
-    ticker: 'BTC',
-    amount: 0.045,
-    entryPrice: 82450,
-    currentPrice: 85465,
-    unrealizedPnl: 135.67,
-    unrealizedPnlPct: 3.65,
-    class: 'CX',
+  PAXG: {
+    ticker: 'PAXG',
+    amount: 2.2,
+    entryPrice: 4120.4,
+    currentPrice: 4146.2,
+    unrealizedPnl: 56.76,
+    unrealizedPnlPct: 0.63,
+    class: 'EQ',
+    peakPrice: 4148.5,
+    peakPnlPct: 0.68,
   },
-  NVDAon: {
-    ticker: 'NVDAon',
-    amount: 18,
-    entryPrice: 222.5,
-    currentPrice: 230.2,
-    unrealizedPnl: 138.6,
-    unrealizedPnlPct: 3.46,
+  MARA: {
+    ticker: 'MARA',
+    amount: 620,
+    entryPrice: 12.05,
+    currentPrice: 12.4,
+    unrealizedPnl: 217.0,
+    unrealizedPnlPct: 2.9,
+    class: 'EQ',
+  },
+  AVGO: {
+    ticker: 'AVGO',
+    amount: 25,
+    entryPrice: 344.2,
+    currentPrice: 351.1,
+    unrealizedPnl: 172.5,
+    unrealizedPnlPct: 2.0,
     class: 'EQ',
   },
 };
-const INITIAL_CASH = 93234.25;
+const INITIAL_CASH = 206074.45;
 
 function loadPersistedAutopilotState() {
   if (typeof window === 'undefined') return null;

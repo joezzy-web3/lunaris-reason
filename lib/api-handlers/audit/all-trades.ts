@@ -1,7 +1,7 @@
 // api/audit/all-trades.ts
 // Vercel Serverless Function: Export audit trades backup backed by Cloudflare D1
 import { queryD1 } from './d1.ts';
-import embeddedTrades from '../../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
+import { AUTHORITATIVE_AUDIT_TRADES } from '../../authoritativeTradesData.ts';
 
 export const config = {
   maxDuration: 15,
@@ -76,7 +76,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const rows = await queryD1('SELECT * FROM trades ORDER BY seq ASC');
-    if (rows && rows.length > 0) {
+    if (rows && rows.length >= AUTHORITATIVE_AUDIT_TRADES.length) {
       const formatted = rows.map(formatD1Row);
       const latestRow = rows[rows.length - 1];
       const totalCount = parseInt(metaMap.total_trades || '', 10) || latestRow.seq || rows.length;
@@ -92,11 +92,33 @@ export default async function handler(req: any, res: any) {
         timestamp: now,
       });
     }
+
+    if (rows && rows.length > 0) {
+      const formatted = rows.map(formatD1Row);
+      const idMap = new Map<string, any>();
+      for (const t of AUTHORITATIVE_AUDIT_TRADES) {
+        if (t && t.id) idMap.set(t.id, t);
+      }
+      for (const t of formatted) {
+        if (t && t.id) idMap.set(t.id, t);
+      }
+      const merged = Array.from(idMap.values());
+      const latestTrade = merged[merged.length - 1];
+      return res.status(200).json({
+        success: true,
+        trades: merged,
+        count: merged.length,
+        totalCount: merged.length,
+        currentBalance: latestTrade?.accountBalance || 100000,
+        source: 'Cloudflare-D1-Merged',
+        timestamp: now,
+      });
+    }
   } catch (err: any) {
     console.error('D1 query fallback in all-trades.ts:', err.message);
   }
 
-  const fallback = Array.isArray(embeddedTrades) ? embeddedTrades : [];
+  const fallback = AUTHORITATIVE_AUDIT_TRADES;
   const latestTrade = fallback[fallback.length - 1];
 
   return res.status(200).json({

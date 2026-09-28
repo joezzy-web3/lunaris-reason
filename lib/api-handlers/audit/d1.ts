@@ -3,21 +3,27 @@
 
 export function getD1Config() {
   return {
-    accountId:
+    accountId: (
       process.env.LUNARIS_CF_ACCOUNT_ID ||
       process.env.CF_ACCOUNT_ID ||
       process.env.CLOUDFLARE_ACCOUNT_ID ||
-      '',
-    databaseId:
+      process.env.LUNARIS_ACCOUNT_ID ||
+      ''
+    ).trim(),
+    databaseId: (
       process.env.LUNARIS_D1_DATABASE_ID ||
       process.env.CF_D1_DATABASE_ID ||
       process.env.CLOUDFLARE_D1_DATABASE_ID ||
-      '',
-    apiToken:
+      process.env.D1_DATABASE_ID ||
+      ''
+    ).trim(),
+    apiToken: (
       process.env.LUNARIS_CF_API_TOKEN ||
       process.env.CF_API_TOKEN ||
       process.env.CLOUDFLARE_API_TOKEN ||
-      '',
+      process.env.LUNARIS_API_TOKEN ||
+      ''
+    ).trim(),
   };
 }
 

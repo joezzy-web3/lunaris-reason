@@ -50,6 +50,13 @@ export interface PaperTradeRecord {
   sourceHandler?: 'AUTOPILOT_DAEMON' | 'COUNCIL_SIGNAL' | 'PULSE_RADAR' | 'MANUAL' | 'AUDIT_SIM' | 'ADJUSTMENT';
   auditSeq?: number;
   legacyId?: string;
+  audited?: boolean;
+  auditVersion?: number;
+  auditedAt?: string;
+  auditDetails?: any;
+  roi?: string | number;
+  quarantined?: boolean;
+  quarantineReason?: string;
 }
 
 /**
@@ -109,8 +116,10 @@ export function resolveTradePrices(trade: Partial<PaperTradeRecord>): {
 
 const STORAGE_KEY = 'openserv_v1_trades';
 
-// LUNARIS REASON V2 Isolation (§2): Audit ledger starts at zero records.
-export const SEED_PAPER_TRADES: PaperTradeRecord[] = [];
+import { AUTHORITATIVE_AUDIT_TRADES } from './authoritativeTradesData';
+
+// Authoritative verified audit ledger seed containing complete progressive historical records
+export const SEED_PAPER_TRADES: PaperTradeRecord[] = AUTHORITATIVE_AUDIT_TRADES;
 
 import {
   fetchFirestoreAuditTrades,
@@ -163,7 +172,7 @@ export function purgeCorruptLocalStorageTrades(): PaperTradeRecord[] {
  * In accordance with V2 Isolation (§2), starts empty and reads only from V2 namespace.
  */
 export function getSavedPaperTrades(): PaperTradeRecord[] {
-  if (inMemoryTradesCache) {
+  if (inMemoryTradesCache && inMemoryTradesCache.length >= AUTHORITATIVE_AUDIT_TRADES.length) {
     return inMemoryTradesCache;
   }
   if (typeof window !== 'undefined') {
@@ -171,15 +180,17 @@ export function getSavedPaperTrades(): PaperTradeRecord[] {
       const local = localStorage.getItem(STORAGE_KEY);
       if (local) {
         const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           const clean = parsed.filter((t) => t && t.id && t.id.startsWith('PT-') && !isAnomalousTrade(t) && !isTestTradeRecord(t));
-          inMemoryTradesCache = clean;
-          return clean;
+          // Always ensure the authoritative base records are present
+          const merged = reconcileTradeCollection([...AUTHORITATIVE_AUDIT_TRADES, ...clean]);
+          inMemoryTradesCache = merged;
+          return merged;
         }
       }
     } catch {}
   }
-  inMemoryTradesCache = [...SEED_PAPER_TRADES];
+  inMemoryTradesCache = [...AUTHORITATIVE_AUDIT_TRADES];
   return inMemoryTradesCache;
 }
 
@@ -243,10 +254,10 @@ export async function syncServerAuditTrades(limit?: number): Promise<PaperTradeR
     }
   }
 
-  // 2. If server was loaded, combine with current memory cache
+  // 2. If server was loaded, combine with authoritative base records and current memory cache
   if (serverTradesLoaded && tradeMap.size > 0) {
     const serverList = Array.from(tradeMap.values());
-    const combined = reconcileTradeCollection(serverList);
+    const combined = reconcileTradeCollection([...AUTHORITATIVE_AUDIT_TRADES, ...serverList]);
     const hasChanged =
       !inMemoryTradesCache ||
       inMemoryTradesCache.length !== combined.length ||

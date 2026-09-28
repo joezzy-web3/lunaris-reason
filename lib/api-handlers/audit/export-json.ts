@@ -1,7 +1,7 @@
 // api/audit/export-json.ts
 // Vercel Serverless Function: Download full audit trail as JSON file backed by Cloudflare D1
 import { queryD1 } from './d1.ts';
-import embeddedTrades from '../../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
+import { AUTHORITATIVE_AUDIT_TRADES } from '../../authoritativeTradesData.ts';
 import { computeMetrics } from './engine.ts';
 
 export const config = {
@@ -54,15 +54,25 @@ export default async function handler(req: any, res: any) {
 
   try {
     const rows = await queryD1('SELECT * FROM trades ORDER BY seq ASC');
-    if (rows && rows.length > 0) {
+    if (rows && rows.length >= AUTHORITATIVE_AUDIT_TRADES.length) {
       trades = rows.map(formatD1Row);
+    } else if (rows && rows.length > 0) {
+      const formatted = rows.map(formatD1Row);
+      const idMap = new Map<string, any>();
+      for (const t of AUTHORITATIVE_AUDIT_TRADES) {
+        if (t && t.id) idMap.set(t.id, t);
+      }
+      for (const t of formatted) {
+        if (t && t.id) idMap.set(t.id, t);
+      }
+      trades = Array.from(idMap.values());
     }
   } catch (err: any) {
     console.error('D1 query fallback in export-json.ts:', err.message);
   }
 
   if (trades.length === 0) {
-    trades = Array.isArray(embeddedTrades) ? (embeddedTrades as any[]) : [];
+    trades = AUTHORITATIVE_AUDIT_TRADES;
   }
 
   const latestTrade = trades.length > 0 ? trades[trades.length - 1] : null;
