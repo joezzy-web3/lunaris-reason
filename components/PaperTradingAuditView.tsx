@@ -393,16 +393,113 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
     }
   };
 
-  const handleDownloadCsv = () => {
+  const handleDownloadCsv = async () => {
     playCyberClick();
-    // Direct server-generated stream downloads the complete trade ledger without browser memory exhaustion
-    window.location.href = '/api/audit/export-csv';
+    try {
+      const resp = await fetch('/api/audit/export-csv');
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob.size > 100) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'lunaris_reason_trade_audit.csv';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+      }
+    } catch {}
+
+    // Fallback: generate and trigger direct client download
+    try {
+      let exportTrades = trades;
+      if (serverTotalCount && serverTotalCount > trades.length) {
+        try {
+          const resp = await fetch('/api/audit/all-trades');
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data.trades) && data.trades.length > 0) {
+              exportTrades = data.trades;
+            }
+          }
+        } catch {}
+      }
+      const canonicalTrades = reconcileTradeCollection(exportTrades);
+      const csvString = generateCsvExport(canonicalTrades);
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lunaris_reason_trade_audit.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      window.location.href = '/api/audit/export-csv';
+    }
   };
 
-  const handleDownloadJson = () => {
+  const handleDownloadJson = async () => {
     playCyberClick();
-    // Direct download of the entire verified trade ledger as a .json file
-    window.location.href = '/api/audit/export-json';
+    try {
+      const resp = await fetch('/api/audit/export-json');
+      if (resp.ok) {
+        const blob = await resp.blob();
+        if (blob.size > 100) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'lunaris_reason_trade_audit.json';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+      }
+    } catch {}
+
+    try {
+      let exportTrades = trades;
+      if (serverTotalCount && serverTotalCount > trades.length) {
+        try {
+          const resp = await fetch('/api/audit/all-trades');
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data.trades) && data.trades.length > 0) {
+              exportTrades = data.trades;
+            }
+          }
+        } catch {}
+      }
+      const canonicalTrades = reconcileTradeCollection(exportTrades);
+      const payload = {
+        platform: 'OpenServ AgentKit Protocol + BRAID',
+        domain: 'Autonomous RWA Yield & Multi-Agent Bounded Reasoning',
+        startingCapitalUsd: 100000.0,
+        currency: 'USD',
+        totalRecords: canonicalTrades.length,
+        settledBalance: canonicalTrades.length > 0 ? canonicalTrades[canonicalTrades.length - 1].accountBalance : 100000,
+        exportTimestamp: new Date().toISOString(),
+        metrics: summaryMetrics || calculateAuditMetrics(canonicalTrades),
+        auditLog: canonicalTrades,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lunaris_reason_trade_audit.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      window.location.href = '/api/audit/export-json';
+    }
   };
 
   const handleCopyJson = async () => {
@@ -770,10 +867,10 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
         <div className="bg-[#0b0c12] border border-white/10 rounded-xl p-3.5">
           <p className="text-[11px] text-gray-400 font-mono">Total Closed Orders</p>
           <p className="text-lg font-bold text-white font-mono mt-1">
-            {metrics.totalTrades} Executed
+            {trades.length} Executed
           </p>
           <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
-            100% Verifiable Logs
+            {todayTrades.length} Today • 100% Verifiable Logs
           </p>
         </div>
       </div>
@@ -919,7 +1016,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
 
           <div className="text-xs text-gray-400 font-mono flex items-center gap-1.5 shrink-0">
             <Activity className="w-3.5 h-3.5 text-yellow-400" />
-            <span>{filteredTrades.length} of {metrics.totalTrades || trades.length} audited</span>
+            <span>{filteredTrades.length} of {trades.length} audited</span>
           </div>
         </div>
       </div>

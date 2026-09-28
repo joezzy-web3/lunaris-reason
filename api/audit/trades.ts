@@ -1,10 +1,10 @@
 // api/audit/trades.ts
 // Vercel Serverless Function: Authoritative trade reader backed by Cloudflare D1
 import { queryD1 } from './d1.ts';
-import { getProgressiveState } from './engine.ts';
+import embeddedTrades from '../../data/openserv_fresh_audit_trades.json' with { type: 'json' };
 
 export const config = {
-  maxDuration: 10,
+  maxDuration: 15,
 };
 
 function formatD1Row(r: any) {
@@ -50,18 +50,35 @@ export default async function handler(req: any, res: any) {
   }
 
   const now = Date.now();
-  const limit = Math.min(100, Math.max(1, parseInt(req.query?.limit as string || '50', 10)));
+  const limitParam = (req.query?.limit as string || 'all').toLowerCase();
+  const isAll = limitParam === 'all' || limitParam === '-1';
+  const numericLimit = isAll ? 5000 : Math.min(2000, Math.max(1, parseInt(limitParam, 10) || 50));
 
   try {
-    const rows = await queryD1('SELECT * FROM trades ORDER BY seq DESC LIMIT ?', [limit]);
+    const metaRows = await queryD1('SELECT key, val FROM audit_meta');
+    const metaMap: Record<string, string> = {};
+    if (Array.isArray(metaRows)) {
+      for (const r of metaRows) {
+        if (r && r.key) metaMap[r.key] = r.val;
+      }
+    }
+
+    const rows = isAll
+      ? await queryD1('SELECT * FROM trades ORDER BY seq ASC')
+      : await queryD1('SELECT * FROM (SELECT * FROM trades ORDER BY seq DESC LIMIT ?) ORDER BY seq ASC', [numericLimit]);
+
     if (rows && rows.length > 0) {
       const formatted = rows.map(formatD1Row);
+      const latestRow = rows[rows.length - 1];
+      const totalCount = parseInt(metaMap.total_trades || '', 10) || latestRow.seq || rows.length;
+      const currentBalance = parseFloat(metaMap.current_balance || '') || latestRow.account_balance || 100000;
+
       return res.status(200).json({
         success: true,
         trades: formatted,
         count: formatted.length,
-        totalCount: rows[0].seq,
-        currentBalance: rows[0].account_balance,
+        totalCount,
+        currentBalance,
         source: 'Cloudflare-D1-SQL',
         timestamp: now,
       });
@@ -70,17 +87,18 @@ export default async function handler(req: any, res: any) {
     console.error('D1 query fallback in trades.ts:', err.message);
   }
 
-  // Graceful fallback to deterministic progressive state if D1 is unreachable
-  const state = getProgressiveState(now);
-  const servedTrades = state.recentTrades || [];
+  // Authoritative fallback if D1 is unreachable: serve full historical ledger
+  const fallback = Array.isArray(embeddedTrades) ? embeddedTrades : [];
+  const servedTrades = isAll ? fallback : fallback.slice(-numericLimit);
+  const latestTrade = fallback[fallback.length - 1];
 
   return res.status(200).json({
     success: true,
     trades: servedTrades,
     count: servedTrades.length,
-    totalCount: state.totalTrades,
-    currentBalance: state.currentBalance,
-    source: 'Deterministic-Engine',
+    totalCount: fallback.length,
+    currentBalance: latestTrade?.accountBalance || 100000,
+    source: 'Authoritative-Embedded-Ledger',
     timestamp: now,
   });
 }

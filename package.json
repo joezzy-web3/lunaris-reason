@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
+    "migrate:d1": "tsx scripts/migrateTradesToD1.ts",
     "test": "node --import tsx --test tests/**/*.test.ts"
   },
   "dependencies": {

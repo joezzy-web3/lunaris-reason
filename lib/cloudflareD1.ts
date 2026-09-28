@@ -24,9 +24,24 @@ export interface D1TradeRow {
 }
 
 export function getD1Credentials() {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || 'de6f32420d2021b88ca16405c61f4154';
-  const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID || 'eb00f7eb-1d17-40cc-99e7-2a1c548853ba';
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = (
+    process.env.LUNARIS_CF_ACCOUNT_ID ||
+    process.env.CF_ACCOUNT_ID ||
+    process.env.CLOUDFLARE_ACCOUNT_ID ||
+    ''
+  ).trim();
+  const databaseId = (
+    process.env.LUNARIS_D1_DATABASE_ID ||
+    process.env.CF_D1_DATABASE_ID ||
+    process.env.CLOUDFLARE_D1_DATABASE_ID ||
+    ''
+  ).trim();
+  const apiToken = (
+    process.env.LUNARIS_CF_API_TOKEN ||
+    process.env.CF_API_TOKEN ||
+    process.env.CLOUDFLARE_API_TOKEN ||
+    ''
+  ).trim();
   return { accountId, databaseId, apiToken };
 }
 

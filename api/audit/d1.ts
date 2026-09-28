@@ -3,9 +3,21 @@
 
 export function getD1Config() {
   return {
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID || 'de6f32420d2021b88ca16405c61f4154',
-    databaseId: process.env.CLOUDFLARE_D1_DATABASE_ID || 'eb00f7eb-1d17-40cc-99e7-2a1c548853ba',
-    apiToken: process.env.CLOUDFLARE_API_TOKEN || '',
+    accountId:
+      process.env.LUNARIS_CF_ACCOUNT_ID ||
+      process.env.CF_ACCOUNT_ID ||
+      process.env.CLOUDFLARE_ACCOUNT_ID ||
+      '',
+    databaseId:
+      process.env.LUNARIS_D1_DATABASE_ID ||
+      process.env.CF_D1_DATABASE_ID ||
+      process.env.CLOUDFLARE_D1_DATABASE_ID ||
+      '',
+    apiToken:
+      process.env.LUNARIS_CF_API_TOKEN ||
+      process.env.CF_API_TOKEN ||
+      process.env.CLOUDFLARE_API_TOKEN ||
+      '',
   };
 }
 
@@ -23,7 +35,7 @@ export async function queryD1<T = any>(sql: string, params: any[] = []): Promise
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ sql, params }),
-    signal: AbortSignal.timeout(3000),
+    signal: AbortSignal.timeout(6000),
   });
 
   if (!resp.ok) {
