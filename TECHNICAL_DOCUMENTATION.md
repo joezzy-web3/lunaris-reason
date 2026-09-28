@@ -66,6 +66,11 @@ Algorithmic trading systems in decentralized finance suffer from two structural 
   * Guardian-01 Slippage Collar Stamp ($\le 0.50\%$).
   * 4-Agent Quorum Consensus Signatures.
 
+### Track 4.1: Native SERV Reasoning Engine & Telemetry Compliance
+* **Direct OpenServ Engine:** Connects to `https://inference-api.openserv.ai/v1/chat/completions` utilizing the native `serv-mini` OpenServ reasoning model.
+* **Telemetry Verification:** Verified under the OpenServ Organization dashboard (`console.openserv.ai/settings/organization`) with active inference telemetry logging.
+* **Dual Execution Surfaces:** Triggerable via the live terminal GUI (`OpenServ MCP Modal` → `Tab 2: Official SERV API Runner`) or programmatically via `npx tsx scripts/runServAgent.ts`.
+
 ---
 
 ## 2. FULL END-TO-END PIPELINE & SYSTEM ARCHITECTURE

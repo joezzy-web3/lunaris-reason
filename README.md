@@ -10,11 +10,34 @@
 ## ⚡ JUDGE QUICK-START (EVALUATE IN UNDER 90 SECONDS)
 
 1. **Launch the Live Cockpit:** Open the [Production Deployment URL](https://lunaris-reason.vercel.app/) in any browser.
-2. **Inspect OpenServ Agent Manifest:** Click the green **"SERV Manifest"** pill in the top header (or navigate directly to `/.well-known/openserv-agent.json`) to view the standardized OpenServ agent registry discovery schema, supported tracks, and economic escrow terms.
-3. **Execute Live OpenServ MCP Tool RPC:** Click the **"OpenServ MCP"** pill button in the top navigation bar. Select any of the 6 registered MCP tools (e.g. `evaluate_rwa_yield_spread` or `enforce_slippage_collar`), and click **"Execute Tool RPC"** to see live sub-100ms JSON-RPC responses with cryptographic `servAttestation` proofs.
-4. **Inspect Reason Attestations in "Proof Certificates":** Navigate to the **Proof Certificates** tab in the main navigation. Browse through live and historical Proof-of-Reasoning certificates generated across both the 24/7 audit ledger and Autopilot sessions. Click **"Inspect Sheet"** on any trade to verify its SHA-256 reason fingerprint, 4-node DAG quorum, and exact fee/slippage math.
-5. **Audit Ledger & Immutable Invariant Check:** Navigate to the **Audit Ledger** tab. Click the **"RWA Vaults"** filter pill to isolate tokenized sovereign debt (`UST10Y`, `TBILL3M`), tokenized physical gold (`PAXG`), and commercial real estate (`REIT`). Click the **"DAILY AUTO-AUDIT: ACTIVE"** badge in the header to run an instant on-demand invariant audit across all settled trades (vets SHA-256 hashes, zero edits, and isolates rather than deletes any anomalous trades to quarantine).
-6. **Run Mathematical Invariant Tests:** Clone this repo and run `npm test` — 24/24 unit tests strictly verify that Net Realized PnL strictly equals Gross PnL minus fees and slippage, and that the 0.50% slippage collar is clamped mathematically.
+2. **Mandatory Hackathon Telemetry Verification ("Collection is on"):** 
+   * In your [OpenServ Organization Settings](https://console.openserv.ai/settings/organization), select **"Collection is on"**.
+   * In the top navigation bar of LUNARIS, click **"OpenServ MCP"** → switch to **"2. Official SERV API Runner (Hackathon Verification)"** (or run `npm run serv:run`).
+   * Trigger the full agent reasoning cycle. The inference call is dispatched directly to OpenServ's native reasoning engine (`https://inference-api.openserv.ai/v1`, model: `serv-mini`), returning a multi-agent consensus trade verdict and registering the verified run in your OpenServ organization telemetry.
+3. **Inspect OpenServ Agent Manifest:** Click the green **"SERV Manifest"** pill in the top header (or navigate directly to `/.well-known/openserv-agent.json`) to view the standardized OpenServ agent registry discovery schema, supported tracks, and economic escrow terms.
+4. **Execute Live OpenServ MCP Tool RPC:** Click the **"OpenServ MCP"** pill button in the top navigation bar. Select any of the 6 registered MCP tools (e.g. `evaluate_rwa_yield_spread` or `enforce_slippage_collar`), and click **"Execute Tool RPC"** to see live sub-100ms JSON-RPC responses with cryptographic `servAttestation` proofs.
+5. **Inspect Reason Attestations in "Proof Certificates":** Navigate to the **Proof Certificates** tab in the main navigation. Browse through live and historical Proof-of-Reasoning certificates generated across both the 24/7 audit ledger and Autopilot sessions. Click **"Inspect Sheet"** on any trade to verify its SHA-256 reason fingerprint, 4-node DAG quorum, and exact fee/slippage math.
+6. **Audit Ledger & Immutable Invariant Check:** Navigate to the **Audit Ledger** tab. Click the **"RWA Vaults"** filter pill to isolate tokenized sovereign debt (`UST10Y`, `TBILL3M`), tokenized physical gold (`PAXG`), and commercial real estate (`REIT`). Click the **"DAILY AUTO-AUDIT: ACTIVE"** badge in the header to run an instant on-demand invariant audit across all settled trades (vets SHA-256 hashes, zero edits, and isolates rather than deletes any anomalous trades to quarantine).
+7. **Run Mathematical Invariant Tests:** Clone this repo and run `npm test` — 24/24 unit tests strictly verify that Net Realized PnL strictly equals Gross PnL minus fees and slippage, and that the 0.50% slippage collar is clamped mathematically.
+
+---
+
+## 🛰️ OPENSERV SERV REASONING API & TELEMETRY PROTOCOL
+
+LUNARIS REASON is powered directly by the official OpenServ inference engine:
+
+* **Endpoint:** `https://inference-api.openserv.ai/v1/chat/completions`
+* **Default Model:** `serv-mini` (OpenServ Native Reasoning Engine)
+* **OpenAI & Claude Compatible:** Conforms to standard JSON completions with mandatory system prompt framing.
+* **Bounded Reasoning DAG:** Ingests live market oracles, calculates Kelly-criterion position sizing, enforces Guardian-01's 0.50% slippage collar, and outputs structured execution/veto decisions.
+* **CLI Runner Script:**
+  ```bash
+  # Execute one full verified reasoning run
+  npx tsx scripts/runServAgent.ts <YOUR_OPENSERV_API_KEY>
+  # Or via package script
+  OPENSERV_API_KEY=serv_... npm run serv:run
+  ```
+* **Production Environment Variable:** Set `OPENSERV_API_KEY` in Vercel to route all serverless autonomous trading loops through OpenServ's inference network with zero secret leakage.
 
 ---
 

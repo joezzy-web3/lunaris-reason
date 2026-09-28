@@ -1,0 +1,96 @@
+// api/openserv/manifest.ts
+// OpenServ Agent Discovery & Manifest Endpoint for Vercel Serverless
+
+export const config = {
+  maxDuration: 10,
+};
+
+export function getOpenServAgentManifest() {
+  return {
+    schemaVersion: 'openserv-agent-v1',
+    agent: {
+      id: 'lunaris-reason',
+      name: 'LUNARIS REASON',
+      version: '2.4.0',
+      description:
+        'Autonomous Institutional Real-World Asset (RWA) Allocator & Multi-Agent Bounded Reasoning Node with Deterministic 0.5% Slippage Collars and Protocol Escrow Micro-Tolls.',
+      framework: 'OpenServ AgentKit + BRAID',
+      author: 'Joezzy (@JoezzyWeb3)',
+      repository: 'https://github.com/joezzy/lunaris-terminal',
+      license: 'MIT',
+    },
+    supportedTracks: [
+      'Track 4: SERV Reasoning (4-Node Bounded DAG & SHA-256 Proofs)',
+      'Track 3: RWA Vaults (Primary Focus - IXS Finance Alignment)',
+      'Track 1: Mainnet & Model Context Protocol (MCP Tool Provider)',
+      'Track 2: AgentKit & Protocol Escrow (10% Micro-Toll Monetization)',
+    ],
+    economicTerms: {
+      performanceMicroToll: '10%',
+      escrowModel: 'OpenServ Protocol Escrow',
+      escrowEndpoint: '/api/openserv/escrow',
+      currency: 'USDT',
+    },
+    capabilities: {
+      protocol: 'JSON-RPC 2.0 / MCP v1.0',
+      executionEngine: 'Guardian-01 Deterministic Code Gate (Non-LLM)',
+      maxSlippageCollarPct: 0.5,
+      maxLeverage: 5,
+      tools: [
+        {
+          name: 'get_rwa_vault_yields',
+          endpoint: 'POST /api/mcp/execute',
+          description:
+            'Returns real-time licensed RWA yield vault APYs, custodian NAVs, and secondary market basis spreads.',
+        },
+        {
+          name: 'get_live_market_quotes',
+          endpoint: 'POST /api/mcp/execute',
+          description:
+            'Returns real-time prices, 24h delta, and liquidity depth for Crypto and Real-World Assets.',
+        },
+        {
+          name: 'enforce_slippage_collar',
+          endpoint: 'POST /api/mcp/execute',
+          description:
+            'Validates an intended order against the deterministic 0.5% maximum slippage collar constraint.',
+        },
+        {
+          name: 'evaluate_rwa_yield_spread',
+          endpoint: 'POST /api/mcp/execute',
+          description:
+            'Computes real-time yield arbitrage spread between crypto staking yields vs tokenized sovereign treasuries (UST10Y 5.15% APY).',
+        },
+        {
+          name: 'execute_rwa_rebalance',
+          endpoint: 'POST /api/mcp/execute',
+          description:
+            'Executes autonomous capital deployment to a licensed RWA vault and routes 10% performance fee to OpenServ Protocol Escrow.',
+        },
+        {
+          name: 'verify_serv_reasoning_proof',
+          endpoint: 'POST /api/mcp/execute',
+          description:
+            'Cryptographically verifies a trade reason certificate using SHA-256 fingerprinting and 4-agent quorum voting proof.',
+        },
+      ],
+    },
+    health: {
+      status: 'HEALTHY',
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
+
+export default function handler(req: any, res: any) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(200).json(getOpenServAgentManifest());
+}
