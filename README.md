@@ -1,15 +1,15 @@
 # ⚡ LUNARIS REASON — OpenServ Autonomous RWA Terminal
 ### Institutional Real-World Asset (RWA) Allocator & Multi-Agent Bounded Reasoning Engine
 **Built for the OpenServ "SERV Hackathon Edition 01" (September 14–28, 2026)**  
-**Author / Lead Architect:** Joezzy (@JoezzyWeb3 / `webjoezzy@gmail.com`)  
-**Live Production Deployment:** [https://ais-pre-xbm4kddjflwmm6jepmeisv-251296233862.europe-west2.run.app](https://ais-pre-xbm4kddjflwmm6jepmeisv-251296233862.europe-west2.run.app)  
+**Author / Lead Architect:** Joezzy (@JoezzyWeb3 / `joezzyweb3@gmail.com`)  
+**Live Production Deployment:** [https://lunaris-reason.vercel.app/](https://lunaris-reason.vercel.app/)  
 **Full Technical Documentation:** See [`TECHNICAL_DOCUMENTATION.md`](./TECHNICAL_DOCUMENTATION.md)
 
 ---
 
 ## ⚡ JUDGE QUICK-START (EVALUATE IN UNDER 90 SECONDS)
 
-1. **Launch the Live Cockpit:** Open the [Production Deployment URL](https://ais-pre-xbm4kddjflwmm6jepmeisv-251296233862.europe-west2.run.app) in any browser.
+1. **Launch the Live Cockpit:** Open the [Production Deployment URL](https://lunaris-reason.vercel.app/) in any browser.
 2. **Inspect OpenServ Agent Manifest:** Click the green **"SERV Manifest"** pill in the top header (or navigate directly to `/.well-known/openserv-agent.json`) to view the standardized OpenServ agent registry discovery schema, supported tracks, and economic escrow terms.
 3. **Execute Live OpenServ MCP Tool RPC:** Click the **"OpenServ MCP"** pill button in the top navigation bar. Select any of the 6 registered MCP tools (e.g. `evaluate_rwa_yield_spread` or `enforce_slippage_collar`), and click **"Execute Tool RPC"** to see live sub-100ms JSON-RPC responses with cryptographic `servAttestation` proofs.
 4. **Inspect Reason Attestations in "Proof Certificates":** Navigate to the **Proof Certificates** tab in the main navigation. Browse through live and historical Proof-of-Reasoning certificates generated across both the 24/7 audit ledger and Autopilot sessions. Click **"Inspect Sheet"** on any trade to verify its SHA-256 reason fingerprint, 4-node DAG quorum, and exact fee/slippage math.
@@ -212,6 +212,6 @@ npm run dev
 
 ## 👥 CREATOR & CREDITS
 - **Lead Architect:** Joezzy (Joezzy Web3)
-- **Email:** `webjoezzy@gmail.com`
+- **Email:** `joezzyweb3@gmail.com`
 - **Hackathon:** OpenServ SERV Hackathon Edition 01 (September 2026)
 - **Partnership Focus:** IXS Finance (Licensed RWA Vaults & Secondary Liquidity), OpenServ AgentKit (Revenue Escrow)
