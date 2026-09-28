@@ -111,54 +111,15 @@ export function ProofCertificatesView({ onOpenCouncil, onOpenAuditLedger }: Proo
     };
   }, []);
 
-  // Map autopilot ledger entries into PaperTradeRecord format
-  const autopilotTrades: PaperTradeRecord[] = useMemo(() => {
-    return (ledger || []).map((item, idx) => ({
-      id: item.id || `AUTOPILOT-${item.ticker}-${idx}`,
-      timestamp: item.utcTimestamp || new Date().toISOString(),
-      instrument: item.ticker.includes('/') ? item.ticker : `${item.ticker}/USDT`,
-      direction: item.type === 'BUY' ? 'LONG' : 'SHORT',
-      price: item.price || 100,
-      entryPrice: item.price || 100,
-      exitPrice: item.type === 'TAKE_PROFIT' || item.type === 'STOP_LOSS' ? item.price : undefined,
-      quantity: item.totalUsd || 3000,
-      leverage: item.ticker.includes('UST') || item.ticker.includes('TBILL') || item.ticker.includes('REIT') ? 1 : 2,
-      balanceChange: item.realizedPnl || 0,
-      balanceChangePct: item.realizedPnlPct || 0,
-      accountBalance: item.balanceAfter || 100000,
-      trigger: item.notes || 'OpenServ SERV Bounded Reasoning Quorum Execution',
-      status: item.type === 'TAKE_PROFIT' ? 'TAKE_PROFIT' : item.type === 'STOP_LOSS' ? 'STOP_LOSS' : 'OPEN',
-    }));
-  }, [ledger]);
-
-  // Unified certificate trades: merges Autopilot ledger AND 24/7 Audit Ledger
+  // Official Proof Certificate trades:
+  // Strictly reflects the actual executed paper trades from the authoritative ledger, scrap all mock entries.
   const certificateTrades: PaperTradeRecord[] = useMemo(() => {
-    const seen = new Set<string>();
-    const unified: PaperTradeRecord[] = [];
-
-    // Local Autopilot trades
-    for (const at of autopilotTrades) {
-      if (at && at.id && !seen.has(at.id)) {
-        seen.add(at.id);
-        unified.push(at);
-      }
-    }
-
-    // 24/7 Audit ledger trades
-    for (const at of auditTrades) {
-      if (at && at.id && !seen.has(at.id)) {
-        seen.add(at.id);
-        unified.push(at);
-      }
-    }
-
-    // Sort newest first
-    return unified.sort((a, b) => {
+    return [...auditTrades].sort((a, b) => {
       const ta = new Date(a.timestamp).getTime() || 0;
       const tb = new Date(b.timestamp).getTime() || 0;
       return tb - ta;
     });
-  }, [autopilotTrades, auditTrades]);
+  }, [auditTrades]);
 
   const filtered = useMemo(() => {
     return certificateTrades.filter((c) => {

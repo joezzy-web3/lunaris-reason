@@ -8,7 +8,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { fetchPriceSnapshot, PriceSnapshot, ASSET_REGISTRY } from '@/lib/liveTokenFeed';
 import { getSeededPrice } from '@/lib/demoSeedData';
 import { TradeProposal } from '@/lib/riskVeto';
-import { recordNewPaperTrade } from '@/lib/paperTradingAudit';
+import { recordNewPaperTrade, syncServerAuditTrades, getSavedPaperTrades, PaperTradeRecord } from '@/lib/paperTradingAudit';
 import { playTradeApprovedChime, playRiskVetoTone } from '@/lib/soundSynth';
 import { AutopilotLedgerEntry } from '@/components/AutopilotLedgerView';
 
@@ -196,45 +196,40 @@ export const AutopilotProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       : INITIAL_CASH;
   });
 
-  // Device-scoped ledger
-  const [ledger, setLedger] = useState<AutopilotLedgerEntry[]>(() => {
-    const p = loadPersistedAutopilotState();
-    if (Array.isArray(p?.ledger) && p.ledger.length > 0) {
-      return p.ledger;
+function paperTradeToLedgerEntry(trade: PaperTradeRecord): AutopilotLedgerEntry {
+  const entryPrice = trade.entryPrice || trade.price || 100;
+  const exitPrice = trade.exitPrice || trade.price || 100;
+  const balanceBefore = (trade.accountBalance || 100000) - (trade.balanceChange || 0);
+
+  return {
+    id: trade.id,
+    timestamp: new Date(trade.timestamp).toLocaleTimeString(),
+    utcTimestamp: trade.timestamp,
+    type: trade.status === 'STOP_LOSS' ? 'STOP_LOSS' : 'TAKE_PROFIT',
+    ticker: (trade.instrument || 'BTC/USDT').split('/')[0],
+    amount: parseFloat(((trade.quantity || 1000) / (entryPrice || 1)).toFixed(4)),
+    price: exitPrice,
+    totalUsd: trade.quantity || 1000,
+    balanceBefore: parseFloat(balanceBefore.toFixed(2)),
+    balanceAfter: trade.accountBalance,
+    realizedPnl: trade.balanceChange || 0,
+    realizedPnlPct: trade.balanceChangePct || 0,
+    notes: trade.trigger || 'Council Quorum Autonomous Execution',
+  };
+}
+
+// Device-scoped ledger mapped directly from actual verified paper trades
+const [ledger, setLedger] = useState<AutopilotLedgerEntry[]>(() => {
+  try {
+    const actual = getSavedPaperTrades();
+    if (Array.isArray(actual) && actual.length > 0) {
+      return actual
+        .filter((t) => t && t.id && !t.id.startsWith('seed-') && !t.id.startsWith('buy-179054'))
+        .map(paperTradeToLedgerEntry);
     }
-    return [
-      {
-        id: 'seed-ledger-1',
-        timestamp: new Date().toLocaleTimeString(),
-        utcTimestamp: new Date().toISOString(),
-        type: 'BUY',
-        ticker: 'BTC',
-        amount: 0.045,
-        price: 77350.0,
-        totalUsd: 3480.75,
-        balanceBefore: 96715.0,
-        balanceAfter: 93234.25,
-        realizedPnl: 0,
-        realizedPnlPct: 0,
-        notes: 'Initial Autopilot position opened on Bitget BTC/USDT spot',
-      },
-      {
-        id: 'seed-ledger-2',
-        timestamp: new Date().toLocaleTimeString(),
-        utcTimestamp: new Date().toISOString(),
-        type: 'BUY',
-        ticker: 'NVDAon',
-        amount: 18.0,
-        price: 182.5,
-        totalUsd: 3285.0,
-        balanceBefore: 100000.0,
-        balanceAfter: 96715.0,
-        realizedPnl: 0,
-        realizedPnlPct: 0,
-        notes: 'Initial Autopilot position opened on NVDA Tokenized Equity',
-      },
-    ];
-  });
+  } catch {}
+  return [];
+});
 
   const [autoExitPct, setAutoExitPct] = useState<number>(() => {
     const p = loadPersistedAutopilotState();
@@ -279,6 +274,61 @@ export const AutopilotProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     maxOpenPositionsRef.current = maxOpenPositions;
   }, [maxOpenPositions]);
+
+  // Synchronize Autopilot ledger and cashBalance with authoritative actual paper trades
+  useEffect(() => {
+    let isMounted = true;
+
+    // Purge any legacy mock entries from browser localStorage
+    try {
+      const raw = localStorage.getItem(AUTOPILOT_STORAGE_KEY);
+      if (raw && (raw.includes('buy-17905') || raw.includes('seed-ledger-'))) {
+        localStorage.removeItem(AUTOPILOT_STORAGE_KEY);
+      }
+    } catch {}
+
+    const updateFromActualTrades = (trades: PaperTradeRecord[]) => {
+      if (!isMounted || !Array.isArray(trades)) return;
+      const valid = trades
+        .filter((t) => t && t.id && !t.id.startsWith('seed-') && !t.id.startsWith('buy-179054'))
+        .map(paperTradeToLedgerEntry);
+      setLedger(valid);
+      const latest = trades[trades.length - 1];
+      if (latest && typeof latest.accountBalance === 'number') {
+        setCashBalance(latest.accountBalance);
+      }
+    };
+
+    // Initial server sync
+    syncServerAuditTrades().then(updateFromActualTrades);
+
+    // Real-time events from server/Firestore ticks
+    const handleUpdated = (e: any) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        updateFromActualTrades(e.detail);
+      }
+    };
+    const handleNew = (e: any) => {
+      if (e.detail && e.detail.id) {
+        setLedger((prev) => {
+          if (prev.some((item) => item.id === e.detail.id)) return prev;
+          return [...prev, paperTradeToLedgerEntry(e.detail)];
+        });
+        if (typeof e.detail.accountBalance === 'number') {
+          setCashBalance(e.detail.accountBalance);
+        }
+      }
+    };
+
+    window.addEventListener('lunaris-audit-updated', handleUpdated);
+    window.addEventListener('lunaris-audit-new-trade', handleNew);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('lunaris-audit-updated', handleUpdated);
+      window.removeEventListener('lunaris-audit-new-trade', handleNew);
+    };
+  }, []);
 
   // Persist locally per device sandbox
   useEffect(() => {

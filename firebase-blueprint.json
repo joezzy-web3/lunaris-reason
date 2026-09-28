@@ -54,6 +54,22 @@
     }
   },
   "firestore": {
+    "/openserv_v1_trades/{tradeId}": {
+      "entity": "AuditTrade",
+      "description": "Primary verified OpenServ audit trades collection"
+    },
+    "/openserv_v1_test_trades/{tradeId}": {
+      "entity": "AuditTrade",
+      "description": "Segregated test and quarantine records"
+    },
+    "/openserv_v1_autopilot_state/{docId}": {
+      "entity": "AutopilotGlobalState",
+      "description": "Primary OpenServ global autopilot state"
+    },
+    "/openserv_v1_audit_state/{docId}": {
+      "entity": "GlobalLedgerState",
+      "description": "Primary OpenServ single-document ledger snapshot"
+    },
     "/audit_trades/{tradeId}": {
       "entity": "AuditTrade",
       "description": "Public read/write verified paper trades for hackathon judges and live execution"

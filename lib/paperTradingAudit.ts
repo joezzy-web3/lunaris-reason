@@ -120,6 +120,7 @@ import {
   resolveRealTradeTimestamp,
   isFirestoreQuotaExceeded,
   isAnomalousTrade,
+  isTestTradeRecord,
   reconcileTradeCollection,
   generateTradeIdempotencyKey,
 } from './firestoreAudit';
@@ -171,8 +172,9 @@ export function getSavedPaperTrades(): PaperTradeRecord[] {
       if (local) {
         const parsed = JSON.parse(local);
         if (Array.isArray(parsed)) {
-          inMemoryTradesCache = parsed;
-          return parsed;
+          const clean = parsed.filter((t) => t && t.id && t.id.startsWith('PT-') && !isAnomalousTrade(t) && !isTestTradeRecord(t));
+          inMemoryTradesCache = clean;
+          return clean;
         }
       }
     } catch {}
@@ -250,12 +252,12 @@ export async function syncServerAuditTrades(limit?: number): Promise<PaperTradeR
       inMemoryTradesCache.length !== combined.length ||
       inMemoryTradesCache[inMemoryTradesCache.length - 1]?.id !== combined[combined.length - 1]?.id;
 
-    // Guard: Never downgrade in-memory cache if it already holds more verified progressive trades
-    if (inMemoryTradesCache && inMemoryTradesCache.length > combined.length) {
-      return inMemoryTradesCache;
-    }
-
     inMemoryTradesCache = combined;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(combined));
+      } catch {}
+    }
     if (typeof window !== 'undefined' && hasChanged) {
       try {
         window.dispatchEvent(new CustomEvent('lunaris-audit-updated', { detail: combined }));

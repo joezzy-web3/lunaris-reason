@@ -20,7 +20,7 @@ import { runIncrementalReconciliation } from './scripts/reconcileAuditTrades';
 import { evaluateTradeRisk, TradeProposal } from './lib/riskVeto';
 import { saveTradeToD1 } from './api/audit/d1.ts';
 import { initializeApp as initFirebaseApp, getApps as getFirebaseApps } from 'firebase/app';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
 
 dotenv.config();
@@ -1132,6 +1132,140 @@ function setFirestoreQuotaStatus(quotaExceeded: boolean, date?: string) {
 
 let cachedServerTrades: any[] | null = null;
 let cachedAuditMetrics: any = null;
+let isHydratingFromFirestore = false;
+let hasCompletedInitialHydration = false;
+
+/**
+ * Bi-directional Firestore Sync & Cold-Boot Hydration:
+ * Queries Firestore 'openserv_v1_trades', combines with local disk records,
+ * reconciles sequences/invariants, pushes any missing trades to Firestore,
+ * and updates memory cache so that server reboots or container restarts NEVER lose trades.
+ */
+async function hydrateAuditTradesFromFirestore(): Promise<any[]> {
+  if (isHydratingFromFirestore) {
+    return cachedServerTrades || [];
+  }
+  isHydratingFromFirestore = true;
+
+  try {
+    ensureAuditFile();
+    let localTrades: any[] = [];
+    if (fs.existsSync(AUDIT_FILE_PATH)) {
+      try {
+        const raw = fs.readFileSync(AUDIT_FILE_PATH, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          localTrades = parsed.filter((t) => t && t.id && !isTestTradeRecord(t));
+        }
+      } catch (readErr) {
+        console.warn('[Hydration] Could not read local audit file:', readErr);
+      }
+    }
+
+    const db = getServerDb();
+    if (!db) {
+      console.warn('[Hydration] Firestore DB not available yet; using local trades:', localTrades.length);
+      const reconciled = reconcileTradeCollection(localTrades);
+      cachedServerTrades = reconciled;
+      cachedAuditMetrics = calculateAuditMetrics(reconciled);
+      return reconciled;
+    }
+
+    console.log('[Hydration] Querying Cloud Firestore openserv_v1_trades...');
+    const snapshot = await getDocs(collection(db, 'openserv_v1_trades'));
+    const firestoreTrades: any[] = [];
+    snapshot.forEach((docSnap) => {
+      const d = docSnap.data();
+      if (d && d.id && !isTestTradeRecord(d)) {
+        firestoreTrades.push(normalizeTradeRecord(d));
+      }
+    });
+
+    console.log(`[Hydration] Fetched ${firestoreTrades.length} trades from Firestore, ${localTrades.length} from local disk.`);
+
+    // Merge by id (union deduplication)
+    const tradeMap = new Map<string, any>();
+    for (const t of localTrades) {
+      if (t && t.id) tradeMap.set(t.id, t);
+    }
+    for (const t of firestoreTrades) {
+      if (t && t.id) {
+        if (!tradeMap.has(t.id)) {
+          tradeMap.set(t.id, t);
+        } else {
+          // Merge properties, prioritizing the most complete postMortem
+          const existing = tradeMap.get(t.id);
+          tradeMap.set(t.id, { ...existing, ...t });
+        }
+      }
+    }
+
+    const merged = Array.from(tradeMap.values());
+    const reconciled = reconcileTradeCollection(merged);
+    cachedServerTrades = reconciled;
+    cachedAuditMetrics = calculateAuditMetrics(reconciled);
+    hasCompletedInitialHydration = true;
+
+    // Persist reconciled dataset to local disk buffer
+    atomicWriteJsonSync(AUDIT_FILE_PATH, reconciled);
+
+    // If local disk had trades not yet in Firestore, backfill them
+    const missingInFirestore = reconciled.filter(
+      (t) => !firestoreTrades.some((ft) => ft.id === t.id)
+    );
+
+    if (missingInFirestore.length > 0 && !getFirestoreQuotaStatus().quotaExceeded) {
+      console.log(`[Hydration] Backfilling ${missingInFirestore.length} trades to Firestore openserv_v1_trades...`);
+      for (const t of missingInFirestore) {
+        try {
+          const docRef = doc(db, 'openserv_v1_trades', t.id);
+          const cleaned: Record<string, any> = {};
+          for (const [k, v] of Object.entries(t)) {
+            if (v !== undefined) cleaned[k] = v;
+          }
+          await setDoc(docRef, cleaned, { merge: true });
+        } catch (syncErr: any) {
+          console.warn(`[Hydration] Failed to sync trade ${t.id} to Firestore:`, syncErr?.message || syncErr);
+        }
+      }
+      console.log(`[Hydration] Successfully synced missing trades to Firestore.`);
+    }
+
+    // Update single-doc state snapshot for client low-bandwidth sync
+    try {
+      const stateDoc = doc(db, 'openserv_v1_audit_state', 'openserv_v1_global_live_ledger');
+      await setDoc(
+        stateDoc,
+        {
+          totalCount: reconciled.length,
+          latestTrade: reconciled.length > 0 ? reconciled[reconciled.length - 1] : null,
+          latestTrades: reconciled.slice(-25),
+          lastUpdated: new Date().toISOString(),
+          accountBalance: reconciled.length > 0 ? reconciled[reconciled.length - 1].accountBalance : 100000,
+        },
+        { merge: true }
+      );
+    } catch {}
+
+    console.log(`[Hydration] Bi-directional sync complete. Active verified ledger size: ${reconciled.length}`);
+    return reconciled;
+  } catch (err: any) {
+    console.error('[Hydration] Firestore hydration error:', err?.message || err);
+    if (!cachedServerTrades) {
+      let fallback: any[] = [];
+      try {
+        if (fs.existsSync(AUDIT_FILE_PATH)) {
+          fallback = JSON.parse(fs.readFileSync(AUDIT_FILE_PATH, 'utf8'));
+        }
+      } catch {}
+      cachedServerTrades = reconcileTradeCollection(fallback);
+      cachedAuditMetrics = calculateAuditMetrics(cachedServerTrades);
+    }
+    return cachedServerTrades;
+  } finally {
+    isHydratingFromFirestore = false;
+  }
+}
 
 function getAuditTrades(): any[] {
   if (cachedServerTrades !== null) {
@@ -1144,15 +1278,22 @@ function getAuditTrades(): any[] {
       const data = fs.readFileSync(AUDIT_FILE_PATH, 'utf8');
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed)) {
-        base = parsed;
+        base = parsed.filter((t) => t && t.id && !isTestTradeRecord(t));
       }
     }
   } catch (err) {
     console.error('Error reading audit trades:', err);
   }
-  // Hard isolation (§2): Never fall back to old historical trades. Ledger starts at 0 records.
-  cachedServerTrades = base;
-  cachedAuditMetrics = calculateAuditMetrics(base);
+  cachedServerTrades = reconcileTradeCollection(base);
+  cachedAuditMetrics = calculateAuditMetrics(cachedServerTrades);
+
+  // Trigger cold boot hydration asynchronously if not yet completed
+  if (!hasCompletedInitialHydration && !isHydratingFromFirestore) {
+    hydrateAuditTradesFromFirestore().catch((err) => {
+      console.warn('[Hydration] Background boot hydration deferred:', err?.message || err);
+    });
+  }
+
   return cachedServerTrades;
 }
 
@@ -1193,7 +1334,23 @@ function saveAuditTrades(trades: any[]) {
         for (const [k, v] of Object.entries(latest)) {
           if (v !== undefined) cleaned[k] = v;
         }
-        setDoc(d, cleaned, { merge: true }).catch(() => {});
+        setDoc(d, cleaned, { merge: true }).catch((err) => {
+          console.warn('[Firestore] Error saving trade:', err?.message || err);
+        });
+
+        // Also update single-doc checkpoint for fast client subscriptions
+        const stateDoc = doc(db, 'openserv_v1_audit_state', 'openserv_v1_global_live_ledger');
+        setDoc(
+          stateDoc,
+          {
+            totalCount: reconciled.length,
+            latestTrade: latest,
+            latestTrades: reconciled.slice(-25),
+            lastUpdated: new Date().toISOString(),
+            accountBalance: latest.accountBalance,
+          },
+          { merge: true }
+        ).catch(() => {});
       }
     }
   } catch (err) {
@@ -2017,6 +2174,23 @@ app.post('/api/audit/trigger-daemon', (req, res) => {
   } catch (err: any) {
     console.error('Trigger daemon error:', err);
     res.status(500).json({ success: false, error: err.message || 'Trigger daemon failed' });
+  }
+});
+
+// GET /api/audit/sync-firestore - On-demand bi-directional sync with Cloud Firestore
+app.get('/api/audit/sync-firestore', async (req, res) => {
+  try {
+    const reconciled = await hydrateAuditTradesFromFirestore();
+    const latest = reconciled.length > 0 ? reconciled[reconciled.length - 1] : null;
+    return res.json({
+      success: true,
+      message: 'Bi-directional Firestore sync completed successfully',
+      totalTrades: reconciled.length,
+      currentBalance: latest ? latest.accountBalance : 100000,
+      timestamp: Date.now(),
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message || 'Sync failed' });
   }
 });
 
@@ -3797,6 +3971,12 @@ async function startServer() {
 
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`LUNARIS Server active on http://0.0.0.0:${PORT}`);
+      // Hydrate audit trades bi-directionally with Firestore on cold boot / restart
+      hydrateAuditTradesFromFirestore().then((trades) => {
+        console.log(`[Startup] Bi-directional Firestore sync initialized. Active ledger contains ${trades.length} verified trades.`);
+      }).catch((err) => {
+        console.warn('[Startup] Initial Firestore hydration deferred:', err?.message || err);
+      });
     });
 
     server.on('error', (err: any) => {
