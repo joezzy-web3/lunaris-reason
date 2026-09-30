@@ -2564,24 +2564,47 @@ function executeServerAgenticTrade(requestedInstrument?: string, requestedDirect
   return normalized;
 }
 
+let nextAutopilotExecutionTime: number = Math.ceil(Date.now() / 60000) * 60000;
+
 function startAutopilotDaemon() {
-  if (autopilotDaemonTimer) clearInterval(autopilotDaemonTimer);
+  if (autopilotDaemonTimer) {
+    clearTimeout(autopilotDaemonTimer as any);
+    clearInterval(autopilotDaemonTimer as any);
+    autopilotDaemonTimer = null;
+  }
   const state = getAutopilotState();
   if (!state.isExecuting) return;
   // Precise cadences: 20s in turbo, 60s standard for measured autonomous execution
   const intervalMs = state.isTurbo ? 20000 : 60000;
-  // Immediate tick on engage so user doesn't wait
-  try {
-    runAutopilotDaemonTick();
-  } catch (e) {
-    console.warn('Immediate daemon tick error:', e);
-  }
-  autopilotDaemonTimer = setInterval(runAutopilotDaemonTick, intervalMs);
+  
+  // Align precisely to the UTC boundary (e.g. top of the minute :00) so all clients/browsers count down in exact lockstep
+  const now = Date.now();
+  const remainder = now % intervalMs;
+  const delayToNextBoundary = remainder === 0 ? intervalMs : intervalMs - remainder;
+  nextAutopilotExecutionTime = now + delayToNextBoundary;
+
+  autopilotDaemonTimer = setTimeout(() => {
+    try {
+      runAutopilotDaemonTick();
+    } catch (e) {
+      console.warn('Aligned daemon tick error:', e);
+    }
+    nextAutopilotExecutionTime = Date.now() + intervalMs;
+    autopilotDaemonTimer = setInterval(() => {
+      try {
+        runAutopilotDaemonTick();
+      } catch (e) {
+        console.warn('Periodic daemon tick error:', e);
+      }
+      nextAutopilotExecutionTime = Date.now() + intervalMs;
+    }, intervalMs);
+  }, delayToNextBoundary);
 }
 
 function stopAutopilotDaemon() {
   if (autopilotDaemonTimer) {
-    clearInterval(autopilotDaemonTimer);
+    clearTimeout(autopilotDaemonTimer as any);
+    clearInterval(autopilotDaemonTimer as any);
     autopilotDaemonTimer = null;
   }
 }
@@ -2638,6 +2661,8 @@ app.get('/api/audit/summary', (req, res) => {
     cachedAuditMetrics = calculateAuditMetrics(trades);
   }
   const latest = trades.length > 0 ? trades[trades.length - 1] : null;
+  const now = Date.now();
+  const remainingSec = Math.max(0, Math.ceil((nextAutopilotExecutionTime - now) / 1000));
   res.json({
     success: true,
     totalTrades: trades.length,
@@ -2645,7 +2670,10 @@ app.get('/api/audit/summary', (req, res) => {
     currentBalance: latest ? latest.accountBalance : 100000,
     metrics: cachedAuditMetrics,
     latestTrade: latest,
-    timestamp: Date.now(),
+    nextExecutionTime: nextAutopilotExecutionTime,
+    secondsUntilNextTick: remainingSec,
+    secondsUntilNextExecution: remainingSec,
+    timestamp: now,
   });
 });
 

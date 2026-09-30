@@ -47,6 +47,9 @@ export default async function handler(req: any, res: any) {
 
   const metrics = computeMetrics(totalTrades, currentBalance, latestTrade);
 
+  const nextExecutionTime = Math.ceil(now / 60000) * 60000;
+  const secondsUntilNextTick = Math.max(0, Math.ceil((nextExecutionTime - now) / 1000));
+
   const payload = {
     success: true,
     totalTrades,
@@ -54,6 +57,9 @@ export default async function handler(req: any, res: any) {
     currentBalance,
     metrics,
     latestTrade,
+    nextExecutionTime,
+    secondsUntilNextTick,
+    secondsUntilNextExecution: secondsUntilNextTick,
     timestamp: now,
     database: 'Cloudflare-D1-SQL',
   };

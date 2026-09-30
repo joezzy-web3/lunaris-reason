@@ -313,6 +313,27 @@ const [ledger, setLedger] = useState<AutopilotLedgerEntry[]>(() => {
     // Initial server sync
     syncServerAuditTrades().then(updateFromActualTrades);
 
+    // Initial server state sync for incognito / multi-browser parity
+    fetch('/api/autopilot/state')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!isMounted || !data || !data.success || !data.state) return;
+        const s = data.state;
+        if (typeof s.cashBalance === 'number' && s.cashBalance > 0) {
+          setCashBalance(s.cashBalance);
+        }
+        if (s.positions && typeof s.positions === 'object' && Object.keys(s.positions).length > 0) {
+          setPositions(s.positions);
+        }
+        if (typeof s.isExecuting === 'boolean') {
+          setIsExecuting(s.isExecuting);
+        }
+        if (typeof s.isTurbo === 'boolean') {
+          setIsTurbo(s.isTurbo);
+        }
+      })
+      .catch(() => {});
+
     // Real-time events from server/Firestore ticks
     const handleUpdated = (e: any) => {
       if (e.detail && Array.isArray(e.detail)) {

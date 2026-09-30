@@ -102,6 +102,7 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
   // Track latest known trade count & ID to detect new server executions immediately
   const lastKnownTradeCountRef = useRef<number>(trades.length);
   const lastKnownTradeIdRef = useRef<string | null>(trades[trades.length - 1]?.id || null);
+  const serverNextExecutionTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     lastKnownTradeCountRef.current = trades.length;
@@ -257,6 +258,10 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
       if (!isMounted || !summary) return;
       setSummaryMetrics(summary.metrics);
       setServerTotalCount(summary.totalTrades);
+      if (summary.nextExecutionTime) {
+        serverNextExecutionTimeRef.current = summary.nextExecutionTime;
+        setSecondsUntilNextTick(Math.max(1, Math.ceil((summary.nextExecutionTime - Date.now()) / 1000)));
+      }
     });
 
     // Initial full fetch loads all authoritative historical records for complete calendar and ledger verification
@@ -274,6 +279,9 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
           if (!isMounted || !summary) return;
           setSummaryMetrics(summary.metrics);
           setServerTotalCount(summary.totalTrades);
+          if (summary.nextExecutionTime) {
+            serverNextExecutionTimeRef.current = summary.nextExecutionTime;
+          }
           if (summary.latestTrade && summary.latestTrade.id !== lastKnownTradeIdRef.current) {
             processIncomingAuthoritativeTrades([summary.latestTrade]);
           }
@@ -317,28 +325,28 @@ export const PaperTradingAuditView: React.FC<PaperTradingAuditViewProps> = ({
 
   const lastExecutedSlotRef = useRef<number>(Math.floor(Date.now() / 60000));
 
-  // 1-second countdown timer locked to universal UTC clock for zero multi-device drift
+  // 1-second countdown timer locked to server next execution time & universal UTC clock for zero multi-device drift
   useEffect(() => {
     if (!isAutoTicking) return;
 
-    setSecondsUntilNextTick(getSecondsUntilNextTick());
+    const computeRemaining = (nowMs: number) => {
+      if (serverNextExecutionTimeRef.current && serverNextExecutionTimeRef.current > nowMs) {
+        return Math.max(1, Math.ceil((serverNextExecutionTimeRef.current - nowMs) / 1000));
+      }
+      return getSecondsUntilNextTick(nowMs);
+    };
+
+    setSecondsUntilNextTick(computeRemaining(Date.now()));
 
     const timer = setInterval(() => {
       const now = Date.now();
-      const remaining = getSecondsUntilNextTick(now);
+      const remaining = computeRemaining(now);
       setSecondsUntilNextTick(remaining);
 
+      // When countdown reaches 0 or universal 60-second boundary reached
       const currentSlot = Math.floor(now / 60000);
-      if (currentSlot > lastExecutedSlotRef.current) {
+      if (remaining <= 1 || currentSlot > lastExecutedSlotRef.current) {
         lastExecutedSlotRef.current = currentSlot;
-        // Universal 60-second boundary reached across all devices
-        // Advance progressive slot immediately with universal UTC seed
-        try {
-          const progressiveNow = generateProgressiveAuditTrades(undefined, now);
-          if (progressiveNow && progressiveNow.length > 0) {
-            processIncomingAuthoritativeTrades(progressiveNow);
-          }
-        } catch {}
         // Synchronize in background with authoritative server daemon
         checkDaemonUpdate();
       }

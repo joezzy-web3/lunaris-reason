@@ -202,6 +202,8 @@ export async function fetchAuditSummary(): Promise<{
   currentBalance: number;
   metrics: AuditSummaryMetrics;
   latestTrade: PaperTradeRecord | null;
+  nextExecutionTime?: number;
+  secondsUntilNextTick?: number;
 } | null> {
   if (typeof window === 'undefined') return null;
   try {
@@ -215,6 +217,8 @@ export async function fetchAuditSummary(): Promise<{
           currentBalance: data.currentBalance,
           metrics: data.metrics,
           latestTrade: data.latestTrade || null,
+          nextExecutionTime: typeof data.nextExecutionTime === 'number' ? data.nextExecutionTime : undefined,
+          secondsUntilNextTick: typeof data.secondsUntilNextTick === 'number' ? data.secondsUntilNextTick : undefined,
         };
       }
     }

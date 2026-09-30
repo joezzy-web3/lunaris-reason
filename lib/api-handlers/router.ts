@@ -18,6 +18,7 @@ import openservEscrowHandler from './openserv/escrow-stats.ts';
 import openservDebateHandler from './openserv/debate.ts';
 import mcpToolsHandler from './mcp/tools.ts';
 import mcpExecuteHandler from './mcp/execute.ts';
+import autopilotStateHandler from './autopilot/state.ts';
 
 export const config = {
   maxDuration: 30,
@@ -101,6 +102,9 @@ export default async function unifiedRouter(req: any, res: any) {
     case 'openserv/escrow-stats':
     case 'openserv/escrow':
       return openservEscrowHandler(req, res);
+
+    case 'autopilot/state':
+      return autopilotStateHandler(req, res);
 
     // --- MODEL CONTEXT PROTOCOL (MCP) ---
     case 'mcp/tools':
