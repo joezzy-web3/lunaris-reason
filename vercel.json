@@ -6,6 +6,12 @@
       "includeFiles": "data/**"
     }
   },
+  "crons": [
+    {
+      "path": "/api/audit/trigger-daemon",
+      "schedule": "*/1 * * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

@@ -13,6 +13,8 @@
     "lint": "tsc --noEmit",
     "migrate:d1": "tsx scripts/migrateTradesToD1.ts",
     "serv:run": "tsx scripts/runServAgent.ts",
+    "test:cron": "tsx scripts/testCronTrigger.ts",
+    "deploy:worker": "npx wrangler deploy",
     "test": "node --import tsx --test tests/**/*.test.ts"
   },
   "dependencies": {

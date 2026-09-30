@@ -2592,12 +2592,12 @@ if (initialBootState.isExecuting) {
   startAutopilotDaemon();
 }
 
-// POST /api/audit/trigger-daemon - Trigger authoritative agentic execution directly on the server
-app.post('/api/audit/trigger-daemon', (req, res) => {
+// GET & POST /api/audit/trigger-daemon - Trigger authoritative agentic execution directly on the server
+app.all('/api/audit/trigger-daemon', (req, res) => {
   try {
-    const instrument = req.body?.instrument;
-    const direction = req.body?.direction;
-    const trade = executeServerAgenticTrade(instrument, direction);
+    const instrument = req.body?.instrument || req.query?.instrument;
+    const direction = req.body?.direction || req.query?.direction;
+    const trade = executeServerAgenticTrade(instrument as string | undefined, direction as 'LONG' | 'SHORT' | undefined);
     const trades = getAuditTrades();
     res.json({
       success: true,
