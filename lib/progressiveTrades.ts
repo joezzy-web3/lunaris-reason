@@ -196,13 +196,13 @@ export function generateProgressiveAuditTrades(
     return [];
   }
 
-  // Filter base trades up to Sept 18 to ensure a clean, continuous anchor
-  const pristineBase = activeBase.filter((t) => t.timestamp && t.timestamp.slice(0, 10) <= '2026-09-18');
-  const anchorTrade = pristineBase.length > 0 ? pristineBase[pristineBase.length - 1] : activeBase[activeBase.length - 1];
+  // Base trades list to anchor progressive ticks
+  const baseList = activeBase;
+  const anchorTrade = baseList[baseList.length - 1];
   const anchorTimeMs = new Date(anchorTrade.timestamp).getTime();
 
   // If already computed up to a recent slot, only compute newly elapsed slots
-  if (cachedProgressiveTrades && cachedProgressiveTrades.length > 0) {
+  if (cachedProgressiveTrades && cachedProgressiveTrades.length >= baseList.length) {
     const currentLastTrade = cachedProgressiveTrades[cachedProgressiveTrades.length - 1];
     const currentLastTimeMs = new Date(currentLastTrade.timestamp).getTime();
     if (targetTimeMs <= currentLastTimeMs + AUTOPILOT_CADENCE_MS) {
@@ -239,20 +239,20 @@ export function generateProgressiveAuditTrades(
     return cachedProgressiveTrades;
   }
 
-  // If the target time is not ahead of the anchor trade, return pristine base
+  // If the target time is not ahead of the anchor trade, return baseList
   if (targetTimeMs <= anchorTimeMs + AUTOPILOT_CADENCE_MS) {
-    return pristineBase;
+    return baseList;
   }
 
-  // Initial full computation from anchor trade up to targetTimeMs (covers Sept 19, 20, 21, 22, 23, 24)
+  // Initial full computation from anchor trade up to targetTimeMs
   const totalSlots = Math.floor((targetTimeMs - anchorTimeMs) / AUTOPILOT_CADENCE_MS);
   if (totalSlots <= 0) {
-    return pristineBase;
+    return baseList;
   }
 
-  const trades: PaperTradeRecord[] = [...pristineBase];
+  const trades: PaperTradeRecord[] = [...baseList];
   let runningBalance = anchorTrade.accountBalance;
-  let lastSeq = anchorTrade.auditSeq || pristineBase.length;
+  let lastSeq = anchorTrade.auditSeq || baseList.length;
 
   for (let i = 1; i <= totalSlots; i++) {
     const slotTimeMs = anchorTimeMs + i * AUTOPILOT_CADENCE_MS;

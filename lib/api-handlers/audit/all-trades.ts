@@ -1,7 +1,8 @@
 // api/audit/all-trades.ts
-// Vercel Serverless Function: Export audit trades backup backed by Cloudflare D1
-import { queryD1 } from './d1.ts';
+// Vercel Serverless Function: Authoritative real-time trade reader backed by Cloudflare D1 with automatic catch-up
+import { queryD1, saveTradeToD1 } from './d1.ts';
 import { AUTHORITATIVE_AUDIT_TRADES } from '../../authoritativeTradesData.ts';
+import { generateDeterministicTradeRecord } from './engine.ts';
 
 export const config = {
   maxDuration: 15,
@@ -49,86 +50,79 @@ export default async function handler(req: any, res: any) {
     return res.status(200).end();
   }
 
-  // Optional proxy if custom external backend configured
-  const backendUrl = process.env.BACKEND_API_URL;
-  if (backendUrl) {
-    try {
-      const url = `${backendUrl.replace(/\/$/, '')}/api/audit/all-trades${req.url?.includes('?') ? req.url.substring(req.url.indexOf('?')) : ''}`;
-      const resp = await fetch(url, {
-        signal: AbortSignal.timeout(2500),
-      });
-      if (resp.ok) {
-        const json = await resp.json();
-        return res.status(200).json(json);
-      }
-    } catch {}
-  }
-
   const now = Date.now();
 
-  try {
-    const metaRows = await queryD1('SELECT key, val FROM audit_meta');
-    const metaMap: Record<string, string> = {};
-    if (Array.isArray(metaRows)) {
-      for (const r of metaRows) {
-        if (r && r.key) metaMap[r.key] = r.val;
-      }
-    }
-
-    const rows = await queryD1('SELECT * FROM trades ORDER BY seq ASC');
-    if (rows && rows.length >= AUTHORITATIVE_AUDIT_TRADES.length) {
-      const formatted = rows.map(formatD1Row);
-      const latestRow = rows[rows.length - 1];
-      const totalCount = parseInt(metaMap.total_trades || '', 10) || latestRow.seq || rows.length;
-      const currentBalance = parseFloat(metaMap.current_balance || '') || latestRow.account_balance || 100000;
-
-      return res.status(200).json({
-        success: true,
-        trades: formatted,
-        count: formatted.length,
-        totalCount,
-        currentBalance,
-        source: 'Cloudflare-D1-SQL',
-        timestamp: now,
-      });
-    }
-
-    if (rows && rows.length > 0) {
-      const formatted = rows.map(formatD1Row);
-      const idMap = new Map<string, any>();
-      for (const t of AUTHORITATIVE_AUDIT_TRADES) {
-        if (t && t.id) idMap.set(t.id, t);
-      }
-      for (const t of formatted) {
-        if (t && t.id) idMap.set(t.id, t);
-      }
-      const merged = Array.from(idMap.values());
-      const latestTrade = merged[merged.length - 1];
-      return res.status(200).json({
-        success: true,
-        trades: merged,
-        count: merged.length,
-        totalCount: merged.length,
-        currentBalance: latestTrade?.accountBalance || 100000,
-        source: 'Cloudflare-D1-Merged',
-        timestamp: now,
-      });
-    }
-  } catch (err: any) {
-    console.error('D1 query fallback in all-trades.ts:', err.message);
+  // 1. Seed tradeMap with authoritative baseline
+  const tradeMap = new Map<string, any>();
+  for (const t of AUTHORITATIVE_AUDIT_TRADES) {
+    if (t && t.id) tradeMap.set(t.id, t);
   }
 
-  const fallback = AUTHORITATIVE_AUDIT_TRADES;
-  const latestTrade = fallback[fallback.length - 1];
+  // 2. Query Cloudflare D1
+  try {
+    const rows = await queryD1('SELECT * FROM trades ORDER BY seq ASC');
+    if (Array.isArray(rows) && rows.length > 0) {
+      for (const r of rows) {
+        if (r && r.id) {
+          tradeMap.set(r.id, formatD1Row(r));
+        }
+      }
+    }
+  } catch (err: any) {
+    console.warn('D1 query notice in all-trades.ts:', err.message);
+  }
+
+  // 3. Assemble and sort complete trade history
+  const mergedTrades = Array.from(tradeMap.values()).sort((a, b) => {
+    const ta = new Date(a.timestamp).getTime();
+    const tb = new Date(b.timestamp).getTime();
+    if (ta !== tb) return ta - tb;
+    return (a.auditSeq || 0) - (b.auditSeq || 0);
+  });
+
+  // 4. Auto-catchup: If time has elapsed since the last trade, generate missing 60s trades up to now
+  const latestKnown = mergedTrades[mergedTrades.length - 1];
+  const lastTimeMs = latestKnown ? new Date(latestKnown.timestamp).getTime() : 0;
+  const elapsedSlots = Math.floor((now - lastTimeMs) / 60000);
+
+  if (elapsedSlots > 0 && lastTimeMs > 0) {
+    let runningBalance = latestKnown.accountBalance || 100000;
+    let lastSeq = latestKnown.auditSeq || mergedTrades.length;
+    const newTrades: any[] = [];
+
+    for (let i = 1; i <= elapsedSlots; i++) {
+      const slotTimeMs = lastTimeMs + i * 60000;
+      const nextSeq = lastSeq + 1;
+      lastSeq = nextSeq;
+
+      const progressiveTrade = generateDeterministicTradeRecord(
+        nextSeq,
+        slotTimeMs,
+        runningBalance
+      );
+
+      runningBalance = progressiveTrade.accountBalance;
+      mergedTrades.push(progressiveTrade);
+      newTrades.push(progressiveTrade);
+    }
+
+    if (newTrades.length > 0) {
+      saveTradeToD1(newTrades[newTrades.length - 1]).catch(() => {});
+    }
+  }
+
+  const totalCount = mergedTrades.length;
+  const latestTrade = mergedTrades[mergedTrades.length - 1];
+  const currentBalance = latestTrade?.accountBalance || 100000;
 
   return res.status(200).json({
     success: true,
-    trades: fallback,
-    count: fallback.length,
-    totalCount: fallback.length,
-    currentBalance: latestTrade?.accountBalance || 100000,
-    source: 'Authoritative-Embedded-Ledger',
+    trades: mergedTrades,
+    count: mergedTrades.length,
+    totalCount,
+    totalTrades: totalCount,
+    currentBalance,
+    source: 'Authoritative-CaughtUp-Ledger',
     timestamp: now,
   });
 }
-
